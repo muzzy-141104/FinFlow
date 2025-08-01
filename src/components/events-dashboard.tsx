@@ -5,7 +5,7 @@ import { PlusCircle } from "lucide-react";
 import { z } from "zod";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { type Event } from "@/lib/types";
+import { type Event, type Currency, currencies } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,10 +18,13 @@ import { AddEventForm } from "./add-event-form";
 import { EventCard } from "./event-card";
 import Image from "next/image";
 
+const currencyKeys = Object.keys(currencies) as [Currency, ...Currency[]];
+
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   description: z.string().optional(),
   imageUrl: z.string().optional(),
+  currency: z.enum(currencyKeys),
 });
 
 export function EventsDashboard() {
@@ -40,6 +43,7 @@ export function EventsDashboard() {
       name: values.name,
       description: values.description || "",
       imageUrl: values.imageUrl,
+      currency: values.currency,
       expenses: [],
     };
     setEvents([...events, newEvent]);

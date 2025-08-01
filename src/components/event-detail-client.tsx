@@ -10,7 +10,7 @@ import "jspdf-autotable";
 import { format } from "date-fns";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { type Event, type Expense } from "@/lib/types";
+import { type Event, type Expense, currencies } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -68,6 +68,11 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
     setIsLoading(false);
   }, []);
 
+  const currencySymbol = useMemo(() => {
+    if (!event) return '$';
+    return currencies[event.currency]?.symbol || '$';
+  }, [event]);
+
 
   const addExpense = (values: z.infer<typeof formSchema>) => {
     if (!event) return;
@@ -114,9 +119,9 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                 format(new Date(e.date), 'PPP'),
                 e.description,
                 e.category,
-                `$${e.amount.toFixed(2)}`
+                `${currencySymbol}${e.amount.toFixed(2)}`
             ]),
-        foot: [['', 'Total', '', `$${totalExpenses.toFixed(2)}`]],
+        foot: [['', 'Total', '', `${currencySymbol}${totalExpenses.toFixed(2)}`]],
         showFoot: 'last_page',
         headStyles: { fillColor: [41, 128, 185] },
         footStyles: { fillColor: [41, 128, 185], textColor: 255 },
@@ -197,10 +202,10 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <span className="text-muted-foreground">$</span>
+            <span className="text-muted-foreground">{currencySymbol}</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalExpenses.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{currencySymbol}{totalExpenses.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               Total amount spent for this event
             </p>
@@ -224,7 +229,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <ExpensesTable expenses={event.expenses} onDeleteExpense={deleteExpense} />
+          <ExpensesTable expenses={event.expenses} onDeleteExpense={deleteExpense} currencySymbol={currencySymbol} />
         </div>
         <div className="lg:col-span-2 space-y-6">
             <ExpenseChart expenses={event.expenses} />

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Event } from "@/lib/types";
+import { Event, currencies } from "@/lib/types";
 import {
   Card,
   CardContent,
@@ -20,6 +20,8 @@ export function EventCard({ event }: EventCardProps) {
     (sum, expense) => sum + expense.amount,
     0
   );
+
+  const currencySymbol = currencies[event.currency]?.symbol || '$';
 
   return (
     <Link href={`/events/${event.id}`}>
@@ -42,7 +44,7 @@ export function EventCard({ event }: EventCardProps) {
         <CardFooter className="flex justify-between items-center p-4 bg-card">
           <Badge variant="secondary">{event.expenses.length} expenses</Badge>
           <p className="text-lg font-semibold text-primary">
-            ${totalExpenses.toFixed(2)}
+            {currencySymbol}{totalExpenses.toFixed(2)}
           </p>
         </CardFooter>
       </Card>

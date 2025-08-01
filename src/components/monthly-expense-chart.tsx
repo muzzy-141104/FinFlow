@@ -11,7 +11,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { type Expense } from "@/lib/types";
+import { type Expense, currencies } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 
 const chartConfig = {
@@ -28,6 +28,8 @@ export function MonthlyExpenseChart({ expenses }: { expenses: Expense[] }) {
     const monthlyTotals = expenses.reduce((acc, expense) => {
       const date = parseISO(expense.date);
       const monthName = format(date, "MMM");
+      // Note: This doesn't convert currencies, it just sums amounts.
+      // This is okay for the dropdown as it's an overview of all spending.
       acc[monthName] = (acc[monthName] || 0) + expense.amount;
       return acc;
     }, {} as Record<string, number>);

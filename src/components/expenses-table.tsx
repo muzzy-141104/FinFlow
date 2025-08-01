@@ -33,6 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 interface ExpensesTableProps {
   expenses: Expense[];
   onDeleteExpense: (id: string) => void;
+  currencySymbol: string;
 }
 
 const categoryIcons: Record<ExpenseCategory, React.ReactNode> = {
@@ -47,6 +48,7 @@ const categoryIcons: Record<ExpenseCategory, React.ReactNode> = {
 export function ExpensesTable({
   expenses,
   onDeleteExpense,
+  currencySymbol,
 }: ExpensesTableProps) {
   if (expenses.length === 0) {
     return (
@@ -90,7 +92,7 @@ export function ExpensesTable({
                   </TableCell>
                   <TableCell>{format(new Date(expense.date), "PPP")}</TableCell>
                   <TableCell className="text-right">
-                    ${expense.amount.toFixed(2)}
+                    {currencySymbol}{expense.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <TooltipProvider>

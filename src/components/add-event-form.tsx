@@ -16,10 +16,21 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select";
+import { currencies, Currency } from "@/lib/types";
+
+const currencyKeys = Object.keys(currencies) as [Currency, ...Currency[]];
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   description: z.string().optional(),
+  currency: z.enum(currencyKeys),
 });
 
 type AddEventFormProps = {
@@ -35,6 +46,7 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
     defaultValues: {
       name: "",
       description: "",
+      currency: "USD",
     },
   });
 
@@ -70,6 +82,33 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
               <FormMessage />
             </FormItem>
           )}
+        />
+        <FormField
+            control={form.control}
+            name="currency"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Currency</FormLabel>
+                <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                >
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a currency" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    {Object.entries(currencies).map(([code, { name, symbol }]) => (
+                        <SelectItem key={code} value={code}>
+                        {symbol} - {name}
+                        </SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
         />
         <FormField
           control={form.control}
