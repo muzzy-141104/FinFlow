@@ -100,7 +100,7 @@ export function ExpensesTable({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDeleteExpense(expense.id)}
-                            className="text-muted-foreground hover:text-destructive"
+                            className="text-muted-foreground hover:text-destructive [&>svg]:hover:text-destructive"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
