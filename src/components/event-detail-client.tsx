@@ -27,7 +27,6 @@ import { AddExpenseForm } from "./add-expense-form";
 import { ExpensesTable } from "./expenses-table";
 import { ExpenseChart } from "./expense-chart";
 import { useToast } from "@/hooks/use-toast";
-import { MonthlyExpenseChart } from "./monthly-expense-chart";
 
 const formSchema = z.object({
   description: z.string().min(2, "Description must be at least 2 characters."),
@@ -189,7 +188,6 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         </div>
         <div className="lg:col-span-2 space-y-6">
             <ExpenseChart expenses={event.expenses} />
-            <MonthlyExpenseChart expenses={event.expenses} />
         </div>
       </div>
     </div>

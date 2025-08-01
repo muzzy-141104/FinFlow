@@ -1,5 +1,10 @@
+
+"use client";
+
 import Link from "next/link";
 import { Wallet, LogOut, Settings } from "lucide-react";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { type Event, type Expense } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +17,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "./theme-toggle";
+import { MonthlyExpenseChart } from "./monthly-expense-chart";
+import { useMemo } from "react";
 
 export function Header() {
+
+  const [events] = useLocalStorage<Event[]>("events", []);
+  
+  const allExpenses = useMemo(() => {
+    return events.flatMap(event => event.expenses);
+  }, [events]);
+
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
@@ -40,7 +54,7 @@ export function Header() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuContent className="w-80" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
@@ -51,6 +65,11 @@ export function Header() {
                     </p>
                   </div>
                 </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div>
+                    <p className="text-xs font-medium text-muted-foreground px-2 py-1.5">Monthly Overview</p>
+                    <MonthlyExpenseChart expenses={allExpenses} />
+                </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />

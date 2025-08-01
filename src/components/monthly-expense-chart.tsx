@@ -1,7 +1,8 @@
+
 "use client";
 
 import * as React from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { format, getMonth, parseISO } from "date-fns";
 
 import {
@@ -50,25 +51,24 @@ export function MonthlyExpenseChart({ expenses }: { expenses: Expense[] }) {
 
 
   if (expenses.length === 0) {
-    return null;
+    return (
+        <div className="text-center py-10">
+            <p className="text-sm text-muted-foreground">No expense data for this year yet.</p>
+        </div>
+    );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Monthly Expense Comparison</CardTitle>
-        <CardDescription>Total expenses per month for the current year.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="max-h-[300px]">
-          <BarChart
+    <div className="p-4">
+        <ChartContainer config={chartConfig} className="max-h-[200px] w-full">
+          <AreaChart
             accessibilityLayer
             data={chartData}
             margin={{
-              top: 20,
-              right: 20,
-              bottom: 20,
-              left: 20,
+              top: 10,
+              right: 10,
+              bottom: 10,
+              left: 10,
             }}
           >
             <CartesianGrid vertical={false} />
@@ -77,18 +77,26 @@ export function MonthlyExpenseChart({ expenses }: { expenses: Expense[] }) {
               tickLine={false}
               tickMargin={10}
               axisLine={false}
+              fontSize={12}
             />
              <YAxis
               tickFormatter={(value) => `$${value}`}
+              fontSize={12}
+              tickCount={3}
             />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="dot" />}
             />
-            <Bar dataKey="total" fill="var(--color-total)" radius={8} />
-          </BarChart>
+            <Area
+              dataKey="total"
+              type="natural"
+              fill="var(--color-total)"
+              fillOpacity={0.3}
+              stroke="var(--color-total)"
+            />
+          </AreaChart>
         </ChartContainer>
-      </CardContent>
-    </Card>
+    </div>
   );
 }
