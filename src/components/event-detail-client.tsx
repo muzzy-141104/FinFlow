@@ -3,8 +3,11 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, PlusCircle } from "lucide-react";
+import { ArrowLeft, PlusCircle, Download } from "lucide-react";
 import { z } from "zod";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { format } from "date-fns";
 
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { type Event, type Expense } from "@/lib/types";
@@ -42,6 +45,13 @@ const formSchema = z.object({
   date: z.date(),
 });
 
+// Extend the window interface to include the autoTable method for jsPDF
+declare module "jspdf" {
+    interface jsPDF {
+      autoTable: (options: any) => jsPDF;
+    }
+  }
+
 export default function EventDetailClient({ eventId }: { eventId: string }) {
   const [events, setEvents] = useLocalStorage<Event[]>("events", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -54,6 +64,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   );
   
   useEffect(() => {
+    // This hook now only sets loading to false, preventing hydration errors.
     setIsLoading(false);
   }, []);
 
@@ -89,6 +100,29 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         variant: "destructive"
     })
   }
+
+  const downloadPdf = () => {
+    if(!event) return;
+    const doc = new jsPDF();
+    doc.text(`Expense Report for ${event.name}`, 14, 16);
+    doc.autoTable({
+        startY: 22,
+        head: [['Date', 'Description', 'Category', 'Amount']],
+        body: event.expenses
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .map(e => [
+                format(new Date(e.date), 'PPP'),
+                e.description,
+                e.category,
+                `$${e.amount.toFixed(2)}`
+            ]),
+        foot: [['', 'Total', '', `$${totalExpenses.toFixed(2)}`]],
+        showFoot: 'last_page',
+        headStyles: { fillColor: [41, 128, 185] },
+        footStyles: { fillColor: [41, 128, 185], textColor: 255 },
+    });
+    doc.save(`${event.name.toLowerCase().replace(/\s/g, '-')}-expenses.pdf`);
+  };
 
   const totalExpenses = useMemo(() => {
     return event?.expenses.reduce((sum, expense) => sum + expense.amount, 0) || 0;
@@ -134,23 +168,29 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           </h1>
           <p className="text-muted-foreground">{event.description}</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Expense
+        <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={downloadPdf}>
+                <Download className="mr-2 h-4 w-4" />
+                Download PDF
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[480px]">
-            <DialogHeader>
-              <DialogTitle>Add a New Expense</DialogTitle>
-            </DialogHeader>
-            <AddExpenseForm
-              onSave={addExpense}
-              onClose={() => setIsDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Expense
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[480px]">
+                <DialogHeader>
+                <DialogTitle>Add a New Expense</DialogTitle>
+                </DialogHeader>
+                <AddExpenseForm
+                onSave={addExpense}
+                onClose={() => setIsDialogOpen(false)}
+                />
+            </DialogContent>
+            </Dialog>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
