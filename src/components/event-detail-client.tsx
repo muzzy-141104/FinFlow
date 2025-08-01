@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, PlusCircle } from "lucide-react";
 import { z } from "zod";
@@ -45,12 +46,18 @@ const formSchema = z.object({
 export default function EventDetailClient({ eventId }: { eventId: string }) {
   const [events, setEvents] = useLocalStorage<Event[]>("events", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   const event = useMemo(
     () => events.find((e) => e.id === eventId),
     [events, eventId]
   );
+  
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
+
 
   const addExpense = (values: z.infer<typeof formSchema>) => {
     if (!event) return;
@@ -87,6 +94,17 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const totalExpenses = useMemo(() => {
     return event?.expenses.reduce((sum, expense) => sum + expense.amount, 0) || 0;
   }, [event]);
+
+  if (isLoading) {
+    return (
+        <div className="text-center py-20">
+          <h2 className="text-2xl font-semibold mb-2">Loading Event...</h2>
+          <p className="text-muted-foreground mb-4">
+            Please wait while we load your event details.
+          </p>
+        </div>
+      );
+  }
 
   if (!event) {
     return (
