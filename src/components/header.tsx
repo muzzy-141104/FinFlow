@@ -4,7 +4,8 @@
 import Link from "next/link";
 import { Wallet, LogOut, Settings } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { type Event, type Expense } from "@/lib/types";
+import { type Event } from "@/lib/types";
+import { useState, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,11 +19,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "./theme-toggle";
 import { MonthlyExpenseChart } from "./monthly-expense-chart";
-import { useMemo } from "react";
+import { SettingsDialog } from "./settings-dialog";
+
 
 export function Header() {
-
   const [events] = useLocalStorage<Event[]>("events", []);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const allExpenses = useMemo(() => {
     return events.flatMap(event => event.expenses);
@@ -71,7 +73,7 @@ export function Header() {
                     <MonthlyExpenseChart expenses={allExpenses} />
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
@@ -87,6 +89,7 @@ export function Header() {
           </nav>
         </div>
       </div>
+      <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </header>
   );
 }
