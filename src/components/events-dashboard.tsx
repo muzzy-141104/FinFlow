@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusCircle } from "lucide-react";
 import { z } from "zod";
 
@@ -26,6 +26,12 @@ const formSchema = z.object({
 export function EventsDashboard() {
   const [events, setEvents] = useLocalStorage<Event[]>("events", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setIsLoading(false);
+  }, []);
+
 
   const addEvent = (values: z.infer<typeof formSchema>) => {
     const newEvent: Event = {
@@ -36,6 +42,17 @@ export function EventsDashboard() {
     };
     setEvents([...events, newEvent]);
   };
+
+  if (isLoading) {
+    return (
+        <div className="text-center py-20">
+          <h2 className="text-2xl font-semibold mb-2">Loading Events...</h2>
+          <p className="text-muted-foreground mb-4">
+            Please wait while we load your events.
+          </p>
+        </div>
+      );
+  }
 
   return (
     <div className="space-y-8">
