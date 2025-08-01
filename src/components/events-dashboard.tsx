@@ -21,6 +21,7 @@ import Image from "next/image";
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   description: z.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 export function EventsDashboard() {
@@ -38,6 +39,7 @@ export function EventsDashboard() {
       id: crypto.randomUUID(),
       name: values.name,
       description: values.description || "",
+      imageUrl: values.imageUrl,
       expenses: [],
     };
     setEvents([...events, newEvent]);

@@ -26,7 +26,7 @@ export function EventCard({ event }: EventCardProps) {
       <Card className="hover:shadow-lg transition-shadow duration-300 h-full flex flex-col overflow-hidden">
         <div className="relative w-full h-48">
           <Image
-            src="https://placehold.co/600x400.png"
+            src={event.imageUrl || "https://placehold.co/600x400.png"}
             alt={event.name}
             layout="fill"
             objectFit="cover"

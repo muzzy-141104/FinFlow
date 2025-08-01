@@ -22,4 +22,5 @@ export interface Event {
   name: string;
   description: string;
   expenses: Expense[];
+  imageUrl?: string;
 }
