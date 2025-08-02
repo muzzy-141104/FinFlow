@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { PlusCircle } from "lucide-react";
 import { z } from "zod";
-import { collection, addDoc, query, where, onSnapshot, DocumentData, collectionGroup, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, addDoc, query, where, onSnapshot, DocumentData, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -39,7 +39,6 @@ export function EventsDashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Wait for authentication to finish before fetching data
     if (authLoading) {
       setIsLoading(true);
       return;
@@ -75,7 +74,7 @@ export function EventsDashboard() {
     if (!user) return;
 
     try {
-        const docRef = await addDoc(collection(db, "events"), {
+        await addDoc(collection(db, "events"), {
             userId: user.uid,
             name: values.name,
             description: values.description || "",
@@ -91,13 +90,11 @@ export function EventsDashboard() {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      // Delete all expenses in the subcollection first
       const expensesQuery = query(collection(db, `events/${eventId}/expenses`));
       const expensesSnapshot = await getDocs(expensesQuery);
-      const batch = expensesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+      const batch = expensesSnapshot.docs.map(expenseDoc => deleteDoc(expenseDoc.ref));
       await Promise.all(batch);
 
-      // Then delete the event itself
       await deleteDoc(doc(db, "events", eventId));
 
       toast({ title: "Event Deleted", description: "The event and all its expenses have been deleted." });
