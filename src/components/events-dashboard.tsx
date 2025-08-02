@@ -35,10 +35,16 @@ export function EventsDashboard() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
+    // Wait for authentication to finish before fetching data
+    if (authLoading) {
+      setIsLoading(true);
+      return;
+    }
+
     if (!user) {
         setEvents([]);
         setIsLoading(false);
@@ -62,7 +68,7 @@ export function EventsDashboard() {
     });
 
     return () => unsubscribe();
-  }, [user, toast]);
+  }, [user, authLoading, toast]);
 
 
   const addEvent = async (values: z.infer<typeof formSchema>) => {
@@ -173,7 +179,7 @@ export function EventsDashboard() {
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Create a New Event</DialogTitle>
-              </DialogHeader>
+              </Header>
               <AddEventForm
                 onSave={addEvent}
                 onClose={() => setIsDialogOpen(false)}
