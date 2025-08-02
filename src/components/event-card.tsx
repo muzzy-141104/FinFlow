@@ -64,7 +64,7 @@ export function EventCard({ event, onDelete }: EventCardProps) {
   const currencySymbol = currencies[event.currency]?.symbol || '$';
 
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-300 h-full flex flex-col overflow-hidden group">
+    <Card className="hover:shadow-lg transition-shadow duration-300 h-full flex flex-col overflow-hidden group relative">
          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
          <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -103,7 +103,7 @@ export function EventCard({ event, onDelete }: EventCardProps) {
             <CardDescription className="text-muted-foreground line-clamp-2 text-gray-300">{event.description}</CardDescription>
           </div>
         </div>
-        <CardFooter className="flex justify-between items-center p-4 bg-card mt-auto">
+        <CardFooter className="flex justify-between items-center p-4 mt-auto">
           <Badge variant="secondary">{expenseCount} expenses</Badge>
           <p className="text-lg font-semibold text-primary">
             {currencySymbol}{totalExpenses.toFixed(2)}
