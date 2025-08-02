@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, useCallback } from "react";
-import { collection, onSnapshot, query, getDocs } from "firebase/firestore";
+import { collection, onSnapshot, query, getDocs, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Button } from "./ui/button";
 import { Trash2 } from "lucide-react";
@@ -37,32 +37,29 @@ export function EventCard({ event, onDelete }: EventCardProps) {
   const [expenseCount, setExpenseCount] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
 
-  const fetchExpensesData = useCallback(async () => {
-    const expensesQuery = query(collection(db, `events/${event.id}/expenses`));
-    try {
-        const snapshot = await getDocs(expensesQuery);
-        const expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
-        setExpenseCount(expensesData.length);
-        const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
-        setTotalExpenses(total);
-    } catch (error) {
-        console.error("Error fetching expenses for event card:", error);
-    }
-  }, [event.id]);
-
+  // This useEffect hook will re-run whenever the event.id changes.
   useEffect(() => {
-    fetchExpensesData();
-    
-    // Set up a listener for real-time updates. When data changes, refetch.
+    // We define a query for the expenses subcollection of the specific event.
     const expensesQuery = query(collection(db, `events/${event.id}/expenses`));
-    const unsubscribe = onSnapshot(expensesQuery, () => {
-        fetchExpensesData();
+
+    // onSnapshot listens for real-time updates to the query.
+    // When the data changes (expense added/deleted), this function will re-run.
+    const unsubscribe = onSnapshot(expensesQuery, (snapshot) => {
+        const expensesData = snapshot.docs.map(doc => doc.data() as Omit<Expense, 'id'>);
+        const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
+        
+        setExpenseCount(snapshot.size);
+        setTotalExpenses(total);
     }, (error) => {
-      console.error("Snapshot error in event card:", error);
+      // This will catch any permission errors if the rules are incorrect for this specific query.
+      console.error(`Error fetching expenses for event ${event.id}:`, error);
     });
 
+    // The cleanup function returned by useEffect.
+    // It unsubscribes from the snapshot listener when the component unmounts
+    // or when the event.id changes, preventing memory leaks.
     return () => unsubscribe();
-  }, [event.id, fetchExpensesData]);
+  }, [event.id]);
 
   const currencySymbol = currencies[event.currency]?.symbol || '$';
 
