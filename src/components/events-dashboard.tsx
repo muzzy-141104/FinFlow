@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { PlusCircle } from "lucide-react";
 import { z } from "zod";
+import { collection, addDoc, query, where, onSnapshot, DocumentData } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/hooks/use-auth";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { type Event, type Currency, currencies } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,25 +30,52 @@ const formSchema = z.object({
 });
 
 export function EventsDashboard() {
-  const [events, setEvents] = useLocalStorage<Event[]>("events", []);
+  const [events, setEvents] = useState<Event[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    setIsLoading(false);
-  }, []);
-
-
-  const addEvent = (values: z.infer<typeof formSchema>) => {
-    const newEvent: Event = {
-      id: crypto.randomUUID(),
-      name: values.name,
-      description: values.description || "",
-      imageUrl: values.imageUrl,
-      currency: values.currency,
-      expenses: [],
+    if (!user) {
+        setEvents([]);
+        setIsLoading(false);
+        return;
     };
-    setEvents([...events, newEvent]);
+
+    setIsLoading(true);
+    const q = query(collection(db, "events"), where("userId", "==", user.uid));
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const userEvents: Event[] = [];
+        querySnapshot.forEach((doc: DocumentData) => {
+            userEvents.push({ id: doc.id, ...doc.data() } as Event);
+        });
+        setEvents(userEvents);
+        setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching events: ", error);
+        setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+
+  const addEvent = async (values: z.infer<typeof formSchema>) => {
+    if (!user) return;
+
+    try {
+        await addDoc(collection(db, "events"), {
+            userId: user.uid,
+            name: values.name,
+            description: values.description || "",
+            imageUrl: values.imageUrl,
+            currency: values.currency,
+            expenses: [],
+        });
+    } catch(e) {
+        console.error("Error adding document: ", e);
+    }
   };
 
   if (isLoading) {

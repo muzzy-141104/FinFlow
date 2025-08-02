@@ -44,6 +44,7 @@ export type Currency = keyof typeof currencies;
 
 export interface Event {
   id:string;
+  userId: string;
   name: string;
   description: string;
   currency: Currency;

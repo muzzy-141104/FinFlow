@@ -24,6 +24,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, writeBatch } from "firebase/firestore";
 
 type SettingsDialogProps = {
   isOpen: boolean;
@@ -33,22 +36,41 @@ type SettingsDialogProps = {
 export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleClearData = () => {
+  const handleClearData = async () => {
+    if (!user) {
+        toast({ title: "Error", description: "You must be logged in to clear data.", variant: "destructive" });
+        return;
+    }
+    
     try {
-        if(typeof window !== "undefined"){
-            window.localStorage.removeItem("events");
-            toast({
-              title: "Data Cleared",
-              description: "All your event data has been successfully deleted.",
-            });
-            // Reload to reflect changes, since useLocalStorage won't update across components otherwise
-            window.location.reload(); 
+        const q = query(collection(db, "events"), where("userId", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            toast({ title: "No Data", description: "There is no data to clear." });
+            setIsAlertOpen(false);
+            onOpenChange(false);
+            return;
         }
+
+        const batch = writeBatch(db);
+        querySnapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+
+        toast({
+          title: "Data Cleared",
+          description: "All your event data has been successfully deleted.",
+        });
+        
     } catch(e) {
+        console.error("Error clearing data: ", e);
         toast({
             title: "Error",
-            description: "Could not clear data.",
+            description: "Could not clear data. Please try again.",
             variant: "destructive"
         })
     }
@@ -91,8 +113,7 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
                   </AlertDialogTitle>
                   <AlertDialogDescription>
                     This action cannot be undone. This will permanently delete
-                    all your event and expense data from your browser's local
-                    storage.
+                    all your event and expense data from the cloud.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

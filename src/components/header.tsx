@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Wallet, LogOut, Settings, Loader2 } from "lucide-react";
 import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,20 +22,35 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "./theme-toggle";
 import { MonthlyExpenseChart } from "./monthly-expense-chart";
 import { SettingsDialog } from "./settings-dialog";
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { type Event } from "@/lib/types";
+import { type Event, type Expense } from "@/lib/types";
 
 export function Header() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
   
-  // This will be replaced with firestore logic later
-  const [events] = useLocalStorage<Event[]>("events", []);
-  
-  const allExpenses = useMemo(() => {
-    return events.flatMap(event => event.expenses);
-  }, [events]);
+  useEffect(() => {
+    if (!user) {
+        setAllExpenses([]);
+        return;
+    }
+
+    const q = query(collection(db, "events"), where("userId", "==", user.uid));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const expenses: Expense[] = [];
+        querySnapshot.forEach((doc) => {
+            const eventData = doc.data() as Event;
+            if (eventData.expenses) {
+                expenses.push(...eventData.expenses);
+            }
+        });
+        setAllExpenses(expenses);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut(auth);

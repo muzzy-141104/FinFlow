@@ -8,9 +8,10 @@ import { z } from "zod";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { format } from "date-fns";
+import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-import { useLocalStorage } from "@/hooks/use-local-storage";
-import { type Event, type Expense, currencies } from "@/lib/types";
+import { type Event, type Expense, currencies, expenseCategories } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +23,6 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -34,18 +34,10 @@ import { useToast } from "@/hooks/use-toast";
 const formSchema = z.object({
   description: z.string().min(2, "Description must be at least 2 characters."),
   amount: z.coerce.number().min(0.01, "Amount must be greater than 0."),
-  category: z.enum([
-    "Travel",
-    "Food",
-    "Housing",
-    "Shopping",
-    "Entertainment",
-    "Other",
-  ]),
+  category: z.enum(expenseCategories),
   date: z.date(),
 });
 
-// Extend the window interface to include the autoTable method for jsPDF
 declare module "jspdf" {
     interface jsPDF {
       autoTable: (options: any) => jsPDF;
@@ -53,20 +45,28 @@ declare module "jspdf" {
   }
 
 export default function EventDetailClient({ eventId }: { eventId: string }) {
-  const [events, setEvents] = useLocalStorage<Event[]>("events", []);
+  const [event, setEvent] = useState<Event | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-
-  const event = useMemo(
-    () => events.find((e) => e.id === eventId),
-    [events, eventId]
-  );
   
   useEffect(() => {
-    // This hook now only sets loading to false, preventing hydration errors.
-    setIsLoading(false);
-  }, []);
+    setIsLoading(true);
+    const eventRef = doc(db, "events", eventId);
+    const unsubscribe = onSnapshot(eventRef, (doc) => {
+        if (doc.exists()) {
+            setEvent({ id: doc.id, ...doc.data() } as Event);
+        } else {
+            setEvent(null);
+        }
+        setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching event: ", error);
+        setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [eventId]);
 
   const currencySymbol = useMemo(() => {
     if (!event) return '$';
@@ -74,7 +74,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   }, [event]);
 
 
-  const addExpense = (values: z.infer<typeof formSchema>) => {
+  const addExpense = async (values: z.infer<typeof formSchema>) => {
     if (!event) return;
 
     const newExpense: Expense = {
@@ -83,27 +83,49 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
       date: values.date.toISOString(),
     };
 
-    const updatedEvents = events.map((e) =>
-      e.id === eventId ? { ...e, expenses: [...e.expenses, newExpense] } : e
-    );
-    setEvents(updatedEvents);
-    toast({
-      title: "Expense Added",
-      description: `"${newExpense.description}" has been added to your event.`,
-    });
+    try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, {
+            expenses: arrayUnion(newExpense)
+        });
+        toast({
+          title: "Expense Added",
+          description: `"${newExpense.description}" has been added to your event.`,
+        });
+    } catch (e) {
+        console.error("Error adding expense: ", e);
+        toast({
+            title: "Error",
+            description: "Could not add expense. Please try again.",
+            variant: "destructive"
+        })
+    }
   };
 
-  const deleteExpense = (expenseId: string) => {
+  const deleteExpense = async (expenseId: string) => {
      if (!event) return;
-     const updatedEvents = events.map((e) =>
-      e.id === eventId ? { ...e, expenses: e.expenses.filter(exp => exp.id !== expenseId) } : e
-    );
-    setEvents(updatedEvents);
-    toast({
-        title: "Expense Deleted",
-        description: "The expense has been removed from your event.",
-        variant: "destructive"
-    })
+     
+     const expenseToDelete = event.expenses.find(exp => exp.id === expenseId);
+     if (!expenseToDelete) return;
+
+     try {
+        const eventRef = doc(db, "events", eventId);
+        await updateDoc(eventRef, {
+            expenses: arrayRemove(expenseToDelete)
+        });
+        toast({
+            title: "Expense Deleted",
+            description: "The expense has been removed from your event.",
+            variant: "destructive"
+        })
+     } catch (e) {
+        console.error("Error deleting expense: ", e);
+        toast({
+            title: "Error",
+            description: "Could not delete expense. Please try again.",
+            variant: "destructive"
+        })
+     }
   }
 
   const downloadPdf = () => {
