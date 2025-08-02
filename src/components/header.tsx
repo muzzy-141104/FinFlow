@@ -1,13 +1,13 @@
+
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Wallet, LogOut, Settings, Loader2 } from "lucide-react";
 import { signOut } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
-import { useState, useMemo, useEffect } from "react";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,38 +20,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "./theme-toggle";
-import { MonthlyExpenseChart } from "./monthly-expense-chart";
 import { SettingsDialog } from "./settings-dialog";
-import { type Event, type Expense } from "@/lib/types";
 
 export function Header() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
   
-  useEffect(() => {
-    if (!user) {
-        setAllExpenses([]);
-        return;
-    }
-
-    const q = query(collection(db, "events"), where("userId", "==", user.uid));
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const expenses: Expense[] = [];
-        querySnapshot.forEach((doc) => {
-            const eventData = doc.data() as Event;
-            if (eventData.expenses) {
-                expenses.push(...eventData.expenses);
-            }
-        });
-        setAllExpenses(expenses);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
-
   const handleLogout = async () => {
     await signOut(auth);
     router.push("/login");
@@ -86,7 +61,7 @@ export function Header() {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-80" align="end" forceMount>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
@@ -97,11 +72,6 @@ export function Header() {
                       </p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div>
-                      <p className="text-xs font-medium text-muted-foreground px-2 py-1.5">Monthly Overview</p>
-                      <MonthlyExpenseChart expenses={allExpenses} />
-                  </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)}>
                     <Settings className="mr-2 h-4 w-4" />
