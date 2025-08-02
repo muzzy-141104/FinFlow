@@ -48,6 +48,10 @@ export interface Event {
   name: string;
   description: string;
   currency: Currency;
-  expenses: Expense[];
   imageUrl?: string;
+  // expenses array removed for performance
+}
+
+export interface EventWithSubcollections extends Event {
+    expenses: Expense[];
 }

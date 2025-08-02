@@ -26,7 +26,7 @@ import { Trash2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, writeBatch } from "firebase/firestore";
+import { collection, query, where, getDocs, writeBatch, doc } from "firebase/firestore";
 
 type SettingsDialogProps = {
   isOpen: boolean;
@@ -45,10 +45,10 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
     }
     
     try {
-        const q = query(collection(db, "events"), where("userId", "==", user.uid));
-        const querySnapshot = await getDocs(q);
+        const eventsQuery = query(collection(db, "events"), where("userId", "==", user.uid));
+        const eventsSnapshot = await getDocs(eventsQuery);
         
-        if (querySnapshot.empty) {
+        if (eventsSnapshot.empty) {
             toast({ title: "No Data", description: "There is no data to clear." });
             setIsAlertOpen(false);
             onOpenChange(false);
@@ -56,9 +56,18 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
         }
 
         const batch = writeBatch(db);
-        querySnapshot.forEach((doc) => {
-            batch.delete(doc.ref);
-        });
+
+        for (const eventDoc of eventsSnapshot.docs) {
+            // Delete expenses subcollection for each event
+            const expensesQuery = collection(db, `events/${eventDoc.id}/expenses`);
+            const expensesSnapshot = await getDocs(expensesQuery);
+            expensesSnapshot.forEach((expenseDoc) => {
+                batch.delete(expenseDoc.ref);
+            });
+            // Delete the event itself
+            batch.delete(eventDoc.ref);
+        }
+
         await batch.commit();
 
         toast({

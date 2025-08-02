@@ -8,10 +8,10 @@ import { z } from "zod";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { format } from "date-fns";
-import { doc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { doc, onSnapshot, addDoc, deleteDoc, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-import { type Event, type Expense, currencies, expenseCategories } from "@/lib/types";
+import { type Event, type Expense, currencies, expenseCategories, EventWithSubcollections } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -45,7 +45,7 @@ declare module "jspdf" {
   }
 
 export default function EventDetailClient({ eventId }: { eventId: string }) {
-  const [event, setEvent] = useState<Event | null>(null);
+  const [event, setEvent] = useState<EventWithSubcollections | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -53,20 +53,31 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   useEffect(() => {
     setIsLoading(true);
     const eventRef = doc(db, "events", eventId);
-    const unsubscribe = onSnapshot(eventRef, (doc) => {
+    
+    const unSubEvent = onSnapshot(eventRef, (doc) => {
         if (doc.exists()) {
-            setEvent({ id: doc.id, ...doc.data() } as Event);
+            const eventData = { id: doc.id, ...doc.data() } as Event;
+            const expensesQuery = collection(db, `events/${eventId}/expenses`);
+            
+            const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
+                const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
+                setEvent({ ...eventData, expenses: expensesData });
+                setIsLoading(false);
+            });
+
+            return () => unSubExpenses();
         } else {
             setEvent(null);
+            setIsLoading(false);
         }
-        setIsLoading(false);
     }, (error) => {
         console.error("Error fetching event: ", error);
         setIsLoading(false);
+        toast({ title: "Error", description: "Failed to fetch event data.", variant: "destructive" });
     });
 
-    return () => unsubscribe();
-  }, [eventId]);
+    return () => unSubEvent();
+  }, [eventId, toast]);
 
   const currencySymbol = useMemo(() => {
     if (!event) return '$';
@@ -77,20 +88,15 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const addExpense = async (values: z.infer<typeof formSchema>) => {
     if (!event) return;
 
-    const newExpense: Expense = {
-      id: crypto.randomUUID(),
-      ...values,
-      date: values.date.toISOString(),
-    };
-
     try {
-        const eventRef = doc(db, "events", eventId);
-        await updateDoc(eventRef, {
-            expenses: arrayUnion(newExpense)
+        const expensesCollectionRef = collection(db, "events", eventId, "expenses");
+        await addDoc(expensesCollectionRef, {
+            ...values,
+            date: values.date.toISOString(),
         });
         toast({
           title: "Expense Added",
-          description: `"${newExpense.description}" has been added to your event.`,
+          description: `"${values.description}" has been added to your event.`,
         });
     } catch (e) {
         console.error("Error adding expense: ", e);
@@ -105,14 +111,9 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const deleteExpense = async (expenseId: string) => {
      if (!event) return;
      
-     const expenseToDelete = event.expenses.find(exp => exp.id === expenseId);
-     if (!expenseToDelete) return;
-
      try {
-        const eventRef = doc(db, "events", eventId);
-        await updateDoc(eventRef, {
-            expenses: arrayRemove(expenseToDelete)
-        });
+        const expenseDocRef = doc(db, "events", eventId, "expenses", expenseId);
+        await deleteDoc(expenseDocRef);
         toast({
             title: "Expense Deleted",
             description: "The expense has been removed from your event.",
