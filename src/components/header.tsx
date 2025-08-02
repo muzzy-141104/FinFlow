@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Wallet, LogOut, Settings, Loader2 } from "lucide-react";
+import { Wallet, LogOut, Settings, Loader2, LineChart } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
@@ -73,6 +73,10 @@ export function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onSelect={() => router.push('/analysis')}>
+                    <LineChart className="mr-2 h-4 w-4" />
+                    <span>Expense Analysis</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setIsSettingsOpen(true)}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
