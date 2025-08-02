@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { collection, onSnapshot, query, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Button } from "./ui/button";
@@ -37,28 +37,32 @@ export function EventCard({ event, onDelete }: EventCardProps) {
   const [expenseCount, setExpenseCount] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
 
-  useEffect(() => {
-    const fetchExpensesData = async () => {
-        const expensesQuery = query(collection(db, `events/${event.id}/expenses`));
+  const fetchExpensesData = useCallback(async () => {
+    const expensesQuery = query(collection(db, `events/${event.id}/expenses`));
+    try {
         const snapshot = await getDocs(expensesQuery);
         const expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
         setExpenseCount(expensesData.length);
         const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
         setTotalExpenses(total);
+    } catch (error) {
+        console.error("Error fetching expenses for event card:", error);
     }
+  }, [event.id]);
+
+  useEffect(() => {
     fetchExpensesData();
     
-    // Set up a listener for real-time updates after the initial fetch
+    // Set up a listener for real-time updates. When data changes, refetch.
     const expensesQuery = query(collection(db, `events/${event.id}/expenses`));
-    const unsubscribe = onSnapshot(expensesQuery, (snapshot) => {
-        const expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
-        setExpenseCount(expensesData.length);
-        const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
-        setTotalExpenses(total);
+    const unsubscribe = onSnapshot(expensesQuery, () => {
+        fetchExpensesData();
+    }, (error) => {
+      console.error("Snapshot error in event card:", error);
     });
 
     return () => unsubscribe();
-  }, [event.id]);
+  }, [event.id, fetchExpensesData]);
 
   const currencySymbol = currencies[event.currency]?.symbol || '$';
 
