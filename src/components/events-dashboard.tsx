@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -72,7 +73,7 @@ export function EventsDashboard() {
             userId: user.uid,
             name: values.name,
             description: values.description || "",
-            imageUrl: values.imageUrl,
+            imageUrl: values.imageUrl || "",
             currency: values.currency,
         });
         toast({ title: "Event Created", description: `"${values.name}" has been created.` });
