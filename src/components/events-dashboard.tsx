@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -39,18 +40,15 @@ export function EventsDashboard() {
 
   useEffect(() => {
     if (authLoading) {
-      setIsLoading(true);
+      return;
+    }
+    if (!user) {
+      setEvents([]);
+      setIsLoading(false);
       return;
     }
 
-    if (!user) {
-        setEvents([]);
-        setIsLoading(false);
-        return;
-    };
-
     const q = query(collection(db, "events"), where("userId", "==", user.uid));
-    
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const userEvents: Event[] = [];
         querySnapshot.forEach((doc: DocumentData) => {
@@ -101,9 +99,8 @@ export function EventsDashboard() {
       toast({ title: "Error", description: "Could not delete event.", variant: "destructive" });
     }
   };
-
-
-  if (isLoading) {
+  
+  if (isLoading || authLoading) {
     return (
       <div className="text-center py-20">
         <h2 className="text-2xl font-semibold mb-2">Loading Events...</h2>
