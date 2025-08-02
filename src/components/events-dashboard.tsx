@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -50,7 +49,6 @@ export function EventsDashboard() {
         return;
     };
 
-    setIsLoading(true);
     const q = query(collection(db, "events"), where("userId", "==", user.uid));
     
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -107,13 +105,13 @@ export function EventsDashboard() {
 
   if (isLoading) {
     return (
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-semibold mb-2">Loading Events...</h2>
-          <p className="text-muted-foreground mb-4">
-            Please wait while we load your events.
-          </p>
-        </div>
-      );
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-semibold mb-2">Loading Events...</h2>
+        <p className="text-muted-foreground mb-4">
+          Please wait while we load your events.
+        </p>
+      </div>
+    );
   }
 
   return (
