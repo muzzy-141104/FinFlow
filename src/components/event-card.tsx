@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import Image from "next/image";
 import { Event, currencies, Expense } from "@/lib/types";
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { collection, onSnapshot, query, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Button } from "./ui/button";
 import { Trash2 } from "lucide-react";
@@ -33,17 +34,29 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, onDelete }: EventCardProps) {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenseCount, setExpenseCount] = useState(0);
   const [totalExpenses, setTotalExpenses] = useState(0);
 
   useEffect(() => {
+    const fetchExpensesData = async () => {
+        const expensesQuery = query(collection(db, `events/${event.id}/expenses`));
+        const snapshot = await getDocs(expensesQuery);
+        const expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+        setExpenseCount(expensesData.length);
+        const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
+        setTotalExpenses(total);
+    }
+    fetchExpensesData();
+    
+    // Set up a listener for real-time updates after the initial fetch
     const expensesQuery = query(collection(db, `events/${event.id}/expenses`));
     const unsubscribe = onSnapshot(expensesQuery, (snapshot) => {
-      const expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
-      setExpenses(expensesData);
-      const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
-      setTotalExpenses(total);
+        const expensesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+        setExpenseCount(expensesData.length);
+        const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
+        setTotalExpenses(total);
     });
+
     return () => unsubscribe();
   }, [event.id]);
 
@@ -90,7 +103,7 @@ export function EventCard({ event, onDelete }: EventCardProps) {
           </div>
         </div>
         <CardFooter className="flex justify-between items-center p-4 bg-card mt-auto">
-          <Badge variant="secondary">{expenses.length} expenses</Badge>
+          <Badge variant="secondary">{expenseCount} expenses</Badge>
           <p className="text-lg font-semibold text-primary">
             {currencySymbol}{totalExpenses.toFixed(2)}
           </p>

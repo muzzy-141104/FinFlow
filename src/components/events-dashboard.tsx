@@ -171,7 +171,7 @@ export function EventsDashboard() {
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Create a New Event</DialogTitle>
-              </Header>
+              </DialogHeader>
               <AddEventForm
                 onSave={addEvent}
                 onClose={() => setIsDialogOpen(false)}
