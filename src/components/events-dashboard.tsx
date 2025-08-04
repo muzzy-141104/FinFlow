@@ -20,6 +20,7 @@ import { AddEventForm } from "./add-event-form";
 import { EventCard } from "./event-card";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
+import { getRandomPlaceholder } from "@/lib/placeholders";
 
 const currencyKeys = Object.keys(currencies) as [Currency, ...Currency[]];
 
@@ -73,7 +74,7 @@ export function EventsDashboard() {
             userId: user.uid,
             name: values.name,
             description: values.description || "",
-            imageUrl: values.imageUrl || `https://source.unsplash.com/600x400/?${values.name.split(' ').join(',')},event,travel`,
+            imageUrl: values.imageUrl || getRandomPlaceholder(),
             currency: values.currency,
         });
         toast({ title: "Event Created", description: `"${values.name}" has been created.` });
@@ -156,11 +157,11 @@ export function EventsDashboard() {
       ) : (
         <div className="text-center py-20 px-6 border-2 border-dashed rounded-lg">
           <Image
-            src="https://source.unsplash.com/400x300/?empty,sad"
+            src="/placeholders/event-empty.jpg"
             alt="No events"
             width={400}
             height={300}
-            className="mx-auto mb-6 rounded-lg"
+            className="mx-auto mb-6 rounded-lg object-cover"
             data-ai-hint="empty state illustration"
           />
           <h2 className="text-2xl font-semibold font-headline mb-2">No Events Yet</h2>

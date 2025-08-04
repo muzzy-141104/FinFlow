@@ -27,6 +27,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog";
+import { placeholderImages } from "@/lib/placeholders";
 
 interface EventCardProps {
   event: Event;
@@ -91,7 +92,7 @@ export function EventCard({ event, onDelete }: EventCardProps) {
       <Link href={`/events/${event.id}`} className="flex flex-col h-full">
         <div className="relative w-full h-48">
           <Image
-            src={event.imageUrl || "https://source.unsplash.com/600x400/?event"}
+            src={event.imageUrl || placeholderImages[0]}
             alt={event.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
