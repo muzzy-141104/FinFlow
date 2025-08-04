@@ -91,7 +91,7 @@ export function EventCard({ event, onDelete }: EventCardProps) {
       <Link href={`/events/${event.id}`} className="flex flex-col h-full">
         <div className="relative w-full h-48">
           <Image
-            src={event.imageUrl || "https://placehold.co/600x400.png"}
+            src={event.imageUrl || "https://source.unsplash.com/600x400/?event"}
             alt={event.name}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"

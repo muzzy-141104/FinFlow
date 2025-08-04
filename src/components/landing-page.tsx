@@ -28,7 +28,7 @@ export function LandingPage() {
                 </div>
               </div>
               <Image
-                src="https://placehold.co/600x400.png"
+                src="https://source.unsplash.com/600x400/?finance,planning"
                 width="600"
                 height="400"
                 alt="Hero"

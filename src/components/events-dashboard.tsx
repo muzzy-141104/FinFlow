@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
 import { PlusCircle } from "lucide-react";
 import { z } from "zod";
-import { collection, addDoc, query, where, onSnapshot, DocumentData, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, addDoc, query, where, onSnapshot, DocumentData, getDocs, deleteDoc, doc, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -74,7 +73,7 @@ export function EventsDashboard() {
             userId: user.uid,
             name: values.name,
             description: values.description || "",
-            imageUrl: values.imageUrl || "https://placehold.co/600x400.png",
+            imageUrl: values.imageUrl || `https://source.unsplash.com/600x400/?${values.name.split(' ').join(',')},event,travel`,
             currency: values.currency,
         });
         toast({ title: "Event Created", description: `"${values.name}" has been created.` });
@@ -86,16 +85,20 @@ export function EventsDashboard() {
 
   const deleteEvent = async (eventId: string) => {
     try {
-      // Note: This is a simplified deletion. In a production app with many expenses,
-      // this should be handled by a Cloud Function to prevent client-side timeouts.
-      const expensesQuery = query(collection(db, `events/${eventId}/expenses`));
+      const eventRef = doc(db, "events", eventId);
+      const expensesQuery = collection(eventRef, "expenses");
       const expensesSnapshot = await getDocs(expensesQuery);
-      const batch = expensesSnapshot.docs.map(expenseDoc => deleteDoc(expenseDoc.ref));
-      await Promise.all(batch);
-
-      // After deleting subcollections, delete the main event document.
-      await deleteDoc(doc(db, "events", eventId));
-
+  
+      const batch = writeBatch(db);
+  
+      expensesSnapshot.forEach((expenseDoc) => {
+        batch.delete(expenseDoc.ref);
+      });
+  
+      batch.delete(eventRef);
+  
+      await batch.commit();
+      
       toast({ title: "Event Deleted", description: "The event and all its expenses have been deleted." });
     } catch (error) {
       console.error("Error deleting event: ", error);
@@ -135,7 +138,7 @@ export function EventsDashboard() {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Create a New Event</DialogTitle>
-            </DialogHeader>
+            </Header>
             <AddEventForm
               onSave={addEvent}
               onClose={() => setIsDialogOpen(false)}
@@ -153,7 +156,7 @@ export function EventsDashboard() {
       ) : (
         <div className="text-center py-20 px-6 border-2 border-dashed rounded-lg">
           <Image
-            src="https://placehold.co/400x300.png"
+            src="https://source.unsplash.com/400x300/?empty,sad"
             alt="No events"
             width={400}
             height={300}
@@ -174,7 +177,7 @@ export function EventsDashboard() {
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle>Create a New Event</DialogTitle>
-              </DialogHeader>
+              </Header>
               <AddEventForm
                 onSave={addEvent}
                 onClose={() => setIsDialogOpen(false)}
