@@ -54,7 +54,7 @@ export function EventsDashboard() {
         querySnapshot.forEach((doc: DocumentData) => {
             userEvents.push({ id: doc.id, ...doc.data() } as Event);
         });
-        setEvents(userEvents);
+        setEvents(userEvents.sort((a, b) => a.name.localeCompare(b.name)));
         setIsLoading(false);
     }, (error) => {
         console.error("Error fetching events: ", error);
@@ -74,7 +74,7 @@ export function EventsDashboard() {
             userId: user.uid,
             name: values.name,
             description: values.description || "",
-            imageUrl: values.imageUrl || "",
+            imageUrl: values.imageUrl || "https://placehold.co/600x400.png",
             currency: values.currency,
         });
         toast({ title: "Event Created", description: `"${values.name}" has been created.` });
@@ -86,11 +86,14 @@ export function EventsDashboard() {
 
   const deleteEvent = async (eventId: string) => {
     try {
+      // Note: This is a simplified deletion. In a production app with many expenses,
+      // this should be handled by a Cloud Function to prevent client-side timeouts.
       const expensesQuery = query(collection(db, `events/${eventId}/expenses`));
       const expensesSnapshot = await getDocs(expensesQuery);
       const batch = expensesSnapshot.docs.map(expenseDoc => deleteDoc(expenseDoc.ref));
       await Promise.all(batch);
 
+      // After deleting subcollections, delete the main event document.
       await deleteDoc(doc(db, "events", eventId));
 
       toast({ title: "Event Deleted", description: "The event and all its expenses have been deleted." });
@@ -102,7 +105,7 @@ export function EventsDashboard() {
   
   if (isLoading || authLoading) {
     return (
-      <div className="text-center py-20">
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8 text-center py-20">
         <h2 className="text-2xl font-semibold mb-2">Loading Events...</h2>
         <p className="text-muted-foreground mb-4">
           Please wait while we load your events.
@@ -112,7 +115,7 @@ export function EventsDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold font-headline tracking-tight">

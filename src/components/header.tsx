@@ -29,7 +29,7 @@ export function Header() {
   
   const handleLogout = async () => {
     await signOut(auth);
-    router.push("/login");
+    router.push("/");
   };
 
   return (
@@ -44,7 +44,7 @@ export function Header() {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-4">
-          <nav className="flex items-center space-x-1">
+          <nav className="flex items-center space-x-2">
             <ThemeToggle />
             {loading ? (
                 <Loader2 className="h-6 w-6 animate-spin" />
@@ -88,7 +88,11 @@ export function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : null}
+            ) : (
+                <Button asChild>
+                    <Link href="/login">Get Started</Link>
+                </Button>
+            )}
           </nav>
         </div>
       </div>

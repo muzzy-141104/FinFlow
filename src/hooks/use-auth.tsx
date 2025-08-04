@@ -32,7 +32,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
-      if (!user && pathname !== "/login") {
+      // If user is not logged in and not on the login page, redirect to login page.
+      // The root path "/" is now the public landing page, so we don't redirect from there.
+      if (!user && pathname !== "/login" && pathname !== "/") {
         router.push("/login");
       }
     });
