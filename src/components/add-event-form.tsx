@@ -64,6 +64,7 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
   function onSubmit(values: z.infer<typeof formSchema>) {
     onSave({ ...values, imageUrl });
     form.reset();
+    setImageUrl(undefined);
     onClose();
   }
 
