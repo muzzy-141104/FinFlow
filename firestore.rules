@@ -2,20 +2,19 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Rules for the events collection
     match /events/{eventId} {
-      // Allow a user to get, update, and delete their own single event document.
-      allow get, update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      // A user can read, write, and delete their own event document.
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
       
-      // Allow a user to create an event if they are logged in and the userId matches their own.
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-
-      // Allow a user to list (query) events only if they are querying for their own events.
-      // This is the key rule that fixes the dashboard loading issue.
+      // A user can query the events collection only if they are filtering by their own user ID.
+      // This is crucial for the main dashboard to load events.
       allow list: if request.auth != null && request.query.resource.data.userId == request.auth.uid;
-
-      // Rules for the expenses subcollection.
+      
+      // Rules for the expenses subcollection
       match /expenses/{expenseId} {
-        // Allow full read/write access to expenses only if the user owns the parent event.
+        // A user can do anything with an expense document (read, write, delete)
+        // only if they own the parent event.
         allow read, write: if request.auth != null && get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
       }
     }
