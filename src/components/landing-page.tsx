@@ -6,19 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Wallet, PieChart, TrendingUp, DollarSign, CreditCard, BarChart3 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
-// Framer Motion (or a similar library) would simplify this, but for the sake of no dependencies:
-// We'll create a simplified motion-like component structure for animations.
-
-const motion = {
-  div: React.forwardRef<HTMLDivElement, React.HTMLProps<HTMLDivElement> & { initial?: any; animate?: any; transition?: any; whileHover?: any; whileTap?: any; onMouseEnter?: any; onMouseLeave?: any; style?: any; variants?: any; viewport?: any; whileInView?: any }>(({ children, ...props }, ref) => {
-    // Basic implementation detail: This component doesn't actually animate on its own
-    // without a library, but it mimics the structure for easier replacement later.
-    // The real animation will be driven by CSS or custom hooks.
-    return <div ref={ref} {...props}>{children}</div>;
-  }),
-};
-
-// 3D Floating Coins Component
+// 3D Floating Coins Component using Canvas
 const FloatingCoins = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -114,33 +102,37 @@ const FloatingCoins = () => {
 };
 
 
-// 3D Credit Card Component
-const CreditCard3D = ({ className = "" }) => {
+// 3D Animated Pie Chart Component
+const AnimatedPieChart = ({ className = "" }) => {
     return (
         <div
-            className={`group relative w-64 h-40 mx-auto cursor-pointer ${className}`}
+            className={`group relative w-64 h-64 mx-auto cursor-pointer ${className}`}
             style={{ perspective: '1000px' }}
         >
             <div
-                className="relative w-full h-full rounded-xl shadow-2xl transition-transform duration-500 group-hover:[transform:rotateY(10deg)_rotateX(-5deg)_scale(1.05)]"
+                className="relative w-full h-full rounded-full shadow-2xl transition-transform duration-500 group-hover:[transform:rotateY(15deg)_rotateX(-10deg)_scale(1.1)]"
                 style={{ transformStyle: 'preserve-3d' }}
             >
-                {/* Card front */}
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-xl p-6 text-white flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                        <div className="w-12 h-8 bg-yellow-400 rounded-md opacity-80"></div>
-                        <Wallet className="w-8 h-8 opacity-60" />
-                    </div>
-                    <div>
-                        <div className="text-lg font-mono tracking-wider">
-                            •••• •••• •••• 1234
-                        </div>
-                        <div className="flex justify-between text-sm mt-1">
-                            <span>FINFLOW USER</span>
-                            <span>12/28</span>
-                        </div>
-                    </div>
-                </div>
+                {/* Chart body */}
+                <div className="absolute inset-0 rounded-full" style={{
+                    backgroundImage: `conic-gradient(
+                        hsl(var(--chart-1)) 0% 40%, 
+                        hsl(var(--chart-2)) 40% 65%, 
+                        hsl(var(--chart-3)) 65% 90%, 
+                        hsl(var(--chart-4)) 90% 100%
+                    )`,
+                    transform: 'translateZ(-10px)'
+                }}></div>
+                 {/* Chart front face with hole */}
+                 <div className="absolute inset-0 rounded-full flex items-center justify-center" style={{ transform: 'translateZ(10px)' }}>
+                     <div className="w-3/4 h-3/4 rounded-full" style={{
+                         backgroundImage: `radial-gradient(circle at center, transparent 60%, hsl(var(--card)) 61%)`
+                     }}></div>
+                     <div className="absolute w-[60%] h-[60%] bg-card/80 backdrop-blur-sm rounded-full flex flex-col items-center justify-center">
+                         <span className="text-3xl font-bold text-primary">75%</span>
+                         <span className="text-sm text-muted-foreground">Budget Used</span>
+                     </div>
+                 </div>
             </div>
         </div>
     );
@@ -227,12 +219,10 @@ export default function LandingPage() {
                             </div>
                             
                             <div
-                                className="relative w-full h-[20rem] md:h-[24rem] lg:h-[28rem]"
+                                className="relative w-full h-[20rem] md:h-[24rem] lg:h-[28rem] flex items-center justify-center"
                                 style={{ perspective: '1000px' }}
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-violet-600/10 to-purple-600/10 rounded-2xl backdrop-blur-sm border border-white/20 shadow-2xl flex items-center justify-center">
-                                    <CreditCard3D />
-                                </div>
+                                <AnimatedPieChart />
                             </div>
                         </div>
                     </div>
