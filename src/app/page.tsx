@@ -4,7 +4,7 @@
 import { EventsDashboard } from '@/components/events-dashboard';
 import LandingPage from '@/components/landing-page';
 import { useAuth } from '@/hooks/use-auth';
-import { Loader2 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/loading-spinner';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -12,7 +12,7 @@ export default function Home() {
   if (loading) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <LoadingSpinner size="lg" />
       </div>
     );
   }

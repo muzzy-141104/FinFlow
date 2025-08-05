@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Wallet, LogOut, Settings, Loader2, LineChart } from "lucide-react";
+import { Wallet, LogOut, Settings, LineChart } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,6 +21,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "./theme-toggle";
 import { SettingsDialog } from "./settings-dialog";
+import { LoadingSpinner } from "./loading-spinner";
 
 export function Header() {
   const { user, loading } = useAuth();
@@ -47,7 +48,9 @@ export function Header() {
           <nav className="flex items-center space-x-2">
             <ThemeToggle />
             {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
+                <div className="h-9 w-9 flex items-center justify-center">
+                    <LoadingSpinner size="sm" />
+                </div>
             ) : user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

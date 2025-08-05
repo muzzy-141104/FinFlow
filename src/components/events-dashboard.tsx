@@ -21,6 +21,7 @@ import { EventCard } from "./event-card";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { getRandomPlaceholder } from "@/lib/placeholders";
+import { LoadingSpinner } from "./loading-spinner";
 
 const currencyKeys = Object.keys(currencies) as [Currency, ...Currency[]];
 
@@ -109,8 +110,9 @@ export function EventsDashboard() {
   
   if (isLoading || authLoading) {
     return (
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8 text-center py-20">
-        <h2 className="text-2xl font-semibold mb-2">Loading Events...</h2>
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8 text-center py-20 flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
+        <LoadingSpinner size="lg" />
+        <h2 className="text-2xl font-semibold mb-2 mt-4">Loading Events...</h2>
         <p className="text-muted-foreground mb-4">
           Please wait while we load your events.
         </p>

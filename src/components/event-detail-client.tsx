@@ -30,6 +30,7 @@ import { AddExpenseForm } from "./add-expense-form";
 import { ExpensesTable } from "./expenses-table";
 import { ExpenseChart } from "./expense-chart";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "./loading-spinner";
 
 const formSchema = z.object({
   description: z.string().min(2, "Description must be at least 2 characters."),
@@ -158,11 +159,12 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
   if (isLoading) {
     return (
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-semibold mb-2">Loading Event...</h2>
-          <p className="text-muted-foreground mb-4">
-            Please wait while we load your event details.
-          </p>
+        <div className="text-center py-20 flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
+            <LoadingSpinner size="lg" />
+            <h2 className="text-2xl font-semibold mb-2 mt-4">Loading Event...</h2>
+            <p className="text-muted-foreground mb-4">
+                Please wait while we load your event details.
+            </p>
         </div>
       );
   }

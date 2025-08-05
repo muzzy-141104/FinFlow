@@ -44,6 +44,7 @@ import {
     SelectValue,
   } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { LoadingSpinner } from "./loading-spinner";
 
 
 const chartConfig = {
@@ -123,7 +124,15 @@ export function ExpenseAnalysisDashboard() {
 
 
   if (isLoading) {
-    return <div className="text-center py-20">Loading expense data...</div>;
+    return (
+        <div className="text-center py-20 flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
+            <LoadingSpinner size="lg" />
+            <h2 className="text-2xl font-semibold mb-2 mt-4">Loading Analytics...</h2>
+            <p className="text-muted-foreground mb-4">
+                Crunching the numbers, please wait.
+            </p>
+        </div>
+    );
   }
 
   return (
