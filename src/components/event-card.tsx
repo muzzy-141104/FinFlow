@@ -53,7 +53,6 @@ export function EventCard({ event, onDelete }: EventCardProps) {
         setTotalExpenses(total);
     }, (error) => {
       // This will catch any permission errors if the rules are incorrect.
-      // We are intentionally hiding this error as requested.
     });
 
     // The cleanup function returned by useEffect.

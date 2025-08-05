@@ -4,14 +4,22 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Allow users to only read, write, and delete their own events
+    // Helper function to check ownership
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
     match /events/{eventId} {
-      allow read, update, delete: if request.auth.uid == resource.data.userId;
-      allow create: if request.auth.uid == request.resource.data.userId;
-      
-      // Allow users to manage expenses only for events they own
+      // Create: User can only create an event for themselves
+      allow create: if isOwner(request.resource.data.userId);
+
+      // Read, Update, Delete: User can only perform these actions on their own events
+      allow get, update, delete: if isOwner(resource.data.userId);
+
+      // Nested expenses collection
       match /expenses/{expenseId} {
-        allow read, list, create, update, delete: if get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
+        // Allow full access to expenses if the user owns the parent event
+        allow read, write, delete: if isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
       }
     }
   }
