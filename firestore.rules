@@ -1,19 +1,42 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Protect the 'events' collection
     match /events/{eventId} {
-      // A user can create an event if they are logged in and the event's userId matches their own.
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Helper function to check if the current user owns the event
+      function isOwner() {
+        return request.auth.uid == resource.data.userId;
+      }
+      
+      // Allow a user to read their own event documents
+      allow get: if isOwner();
+      
+      // Allow a user to query for their own events.
+      // This rule ensures any 'list' query on the 'events' collection
+      // MUST include a 'where("userId", "==", request.auth.uid)' clause.
+      allow list: if request.auth.uid != null && request.query.resource.data.userId == request.auth.uid;
 
-      // A user can read, update, or delete an event if they own it.
-      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Allow a user to create an event if they are the owner
+      allow create: if request.auth.uid == request.resource.data.userId;
 
+      // Allow a user to update or delete their own events
+      allow update, delete: if isOwner();
+      
+      // Protect the 'expenses' subcollection
       match /expenses/{expenseId} {
-        // A user can create/update/delete an expense if they own the parent event.
-        allow write: if request.auth != null && get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
         
-        // A user can read an expense if they own the parent event.
-        allow read: if request.auth != null && get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
+        // Helper function to check ownership of the parent event
+        function isEventOwner() {
+          // Check the 'userId' on the parent event document
+          return get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
+        }
+
+        // Allow all read and write operations on expenses
+        // only if the user owns the parent event.
+        allow read, write: if isEventOwner();
       }
     }
   }
