@@ -54,7 +54,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-type Period = "weekly" | "monthly" | "yearly";
+type Period = "daily" | "weekly" | "monthly" | "yearly";
 
 export function ExpenseAnalysisDashboard() {
   const [events, setEvents] = React.useState<Event[]>([]);
@@ -98,7 +98,9 @@ export function ExpenseAnalysisDashboard() {
     expenses.forEach((expense) => {
       const date = parseISO(expense.date);
       let key = "";
-      if (period === "weekly") {
+      if (period === "daily") {
+        key = format(date, "yyyy-MM-dd");
+      } else if (period === "weekly") {
         const weekStart = startOfWeek(date, { weekStartsOn: 1 });
         key = format(weekStart, "yyyy-MM-dd");
       } else if (period === "monthly") {
@@ -114,7 +116,10 @@ export function ExpenseAnalysisDashboard() {
         .map(([date, total]) => ({ date, total }))
         .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    // For weekly, format the label to be more readable
+    // Format the label to be more readable
+    if (period === 'daily') {
+        return sortedData.map(d => ({ ...d, date: format(parseISO(d.date), "MMM d, yyyy")}));
+    }
     if (period === 'weekly') {
         return sortedData.map(d => ({ ...d, date: `Week of ${format(parseISO(d.date), "MMM d")}`}));
     }
@@ -198,6 +203,7 @@ export function ExpenseAnalysisDashboard() {
                   <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>
+                  <SelectItem value="daily">Daily</SelectItem>
                   <SelectItem value="weekly">Weekly</SelectItem>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="yearly">Yearly</SelectItem>
@@ -228,6 +234,13 @@ export function ExpenseAnalysisDashboard() {
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
+                    tickFormatter={(value, index) => {
+                      if (period === 'daily' && chartData.length > 10) {
+                        // Show fewer labels if there are many days
+                        return index % Math.ceil(chartData.length / 10) === 0 ? value : '';
+                      }
+                      return value;
+                    }}
                 />
                 <YAxis
                     tickLine={false}
