@@ -90,7 +90,7 @@ export function EventCard({ event, onDelete }: EventCardProps) {
         </AlertDialog>
         </div>
       <Link href={`/events/${event.id}`} className="flex flex-col h-full">
-        <div className="relative w-full h-48">
+        <div className="relative w-full h-56">
           <Image
             src={event.imageUrl || placeholderImages[0]}
             alt={event.name}
