@@ -2,7 +2,7 @@
 "use client";
 
 import { EventsDashboard } from '@/components/events-dashboard';
-import { LandingPage } from '@/components/landing-page';
+import LandingPage from '@/components/landing-page';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
 
