@@ -4,11 +4,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,13 +26,21 @@ import {
     SelectValue,
   } from "@/components/ui/select";
 import { currencies, Currency } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 const currencyKeys = Object.keys(currencies) as [Currency, ...Currency[]];
+
+// 1MB file size limit
+const MAX_FILE_SIZE = 1024 * 1024; 
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   description: z.string().optional(),
   currency: z.enum(currencyKeys),
+  // The imageUrl is a base64 string, so we validate its length
+  imageUrl: z.string().max(MAX_FILE_SIZE * 1.4, "Image must be less than 1MB.").optional(),
 });
 
 type AddEventFormProps = {
@@ -39,6 +49,9 @@ type AddEventFormProps = {
 };
 
 export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
+  const { toast } = useToast();
+  const [fileName, setFileName] = useState<string | null>(null);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,6 +60,44 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
       currency: "USD",
     },
   });
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        form.setError("imageUrl", {
+          type: "manual",
+          message: "Image must be smaller than 1MB.",
+        });
+        setFileName(null);
+        return;
+      }
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        form.setError("imageUrl", {
+            type: "manual",
+            message: "Only .jpg, .jpeg, .png and .webp formats are supported.",
+        });
+        setFileName(null);
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        form.setValue("imageUrl", reader.result as string);
+        form.clearErrors("imageUrl"); // Clear error if a valid file is selected
+        setFileName(file.name);
+      };
+      reader.onerror = () => {
+          toast({
+              title: "Error Reading File",
+              description: "Could not read the selected file. Please try again.",
+              variant: "destructive",
+          })
+      }
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     onSave(values);
@@ -109,6 +160,30 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
                   {...field}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="imageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Event Image (Optional)</FormLabel>
+              <FormControl>
+                <Input
+                  type="file"
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                  onChange={handleFileChange}
+                />
+              </FormControl>
+              <FormDescription>
+                {fileName 
+                  ? `Selected: ${fileName}`
+                  : "Upload an image for your event. Max 1MB."
+                }
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

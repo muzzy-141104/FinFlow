@@ -30,6 +30,7 @@ const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   description: z.string().optional(),
   currency: z.enum(currencyKeys),
+  imageUrl: z.string().optional(),
 });
 
 export function EventsDashboard() {
@@ -75,7 +76,7 @@ export function EventsDashboard() {
             userId: user.uid,
             name: values.name,
             description: values.description || "",
-            imageUrl: getRandomPlaceholder(),
+            imageUrl: values.imageUrl || getRandomPlaceholder(),
             currency: values.currency,
         });
         toast({ title: "Event Created", description: `"${values.name}" has been created.` });
