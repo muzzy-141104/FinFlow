@@ -1,15 +1,17 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only read and write their own events.
+
+    // Allow users to only read, write, and delete their own events
     match /events/{eventId} {
       allow read, update, delete: if request.auth.uid == resource.data.userId;
       allow create: if request.auth.uid == request.resource.data.userId;
-
-      // Allow reading/writing expenses only for the user who owns the parent event.
+      
+      // Allow users to manage expenses only for events they own
       match /expenses/{expenseId} {
-        allow read, write, delete: if get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
+        allow read, list, create, update, delete: if get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
       }
     }
   }
