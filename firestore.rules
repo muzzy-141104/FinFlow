@@ -1,20 +1,21 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Rules for the events collection
     match /events/{eventId} {
-      // A user can read, write, and delete their own event document.
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-      
-      // A user can query the events collection only if they are filtering by their own user ID.
-      // This is crucial for the main dashboard to load events.
+      // Allow a user to create an event if the event's userId matches their own.
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+      // Allow a user to read, update, or delete their own event.
+      allow get, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+
+      // Allow a user to list events only when querying for their own events.
       allow list: if request.auth != null && request.query.resource.data.userId == request.auth.uid;
-      
-      // Rules for the expenses subcollection
+
+      // Rules for the expenses subcollection.
       match /expenses/{expenseId} {
-        // A user can do anything with an expense document (read, write, delete)
-        // only if they own the parent event.
+        // A user can perform any action on an expense if they own the parent event.
         allow read, write: if request.auth != null && get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
       }
     }
