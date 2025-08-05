@@ -52,6 +52,12 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const { toast } = useToast();
   
   useEffect(() => {
+    if (event?.name) {
+      document.title = `${event.name} | FinFlow`;
+    }
+  }, [event?.name]);
+
+  useEffect(() => {
     setIsLoading(true);
     const eventRef = doc(db, "events", eventId);
     
@@ -228,7 +234,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
             <span className="text-muted-foreground">{currencySymbol}</span>
-          </CardHeader>
+          </dCardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{currencySymbol}{totalExpenses.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
