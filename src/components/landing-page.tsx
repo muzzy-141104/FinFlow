@@ -334,7 +334,10 @@ export default function LandingPage() {
                 <section className="w-full py-20 md:py-28">
                     <div className="container px-4 md:px-6">
                         <div className="bg-primary text-primary-foreground rounded-2xl p-10 md:p-16 text-center shadow-xl overflow-hidden relative">
-                           
+                            {/* Animated background elements */}
+                            <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full opacity-30 -translate-x-1/2 -translate-y-1/2" style={{ filter: 'blur(60px)', animation: 'pulse 8s infinite' }}></div>
+                            <div className="absolute bottom-0 right-0 w-80 h-80 bg-white/10 rounded-full opacity-50 translate-x-1/2 translate-y-1/2" style={{ filter: 'blur(80px)', animation: 'pulse 10s infinite reverse' }}></div>
+                            
                             <div className="space-y-6 max-w-2xl mx-auto relative z-10">
                                 <h2 className="text-3xl font-bold font-headline tracking-tight lg:text-4xl">
                                     Ready to Take Control of Your Finances?
@@ -354,7 +357,12 @@ export default function LandingPage() {
                         </div>
                     </div>
                 </section>
-
+                <style jsx>{`
+                    @keyframes pulse {
+                        0%, 100% { transform: scale(1); opacity: 0.5; }
+                        50% { transform: scale(1.2); opacity: 0.3; }
+                    }
+                `}</style>
                 {/* Footer */}
                 <footer className="w-full py-8 bg-background border-t">
                     <div className="container px-4 md:px-6 flex justify-center items-center">
