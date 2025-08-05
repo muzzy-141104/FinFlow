@@ -54,7 +54,7 @@ export function EventCard({ event, onDelete }: EventCardProps) {
     }, (error) => {
         // This will catch permission errors if the rules are not set up correctly.
         // It prevents the app from crashing and logs the error for debugging.
-        console.error(`Firestore permission error on event ${event.id}:`, error);
+        // By request, we are hiding this error from the console.
     });
 
     // The cleanup function returned by useEffect.
