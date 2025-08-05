@@ -7,6 +7,9 @@ import { AuthProvider } from '@/hooks/use-auth';
 export const metadata: Metadata = {
   title: 'FinFlow',
   description: 'Manage your event expenses with ease.',
+  icons: {
+    icon: 'data:;base64,iVBORw0KGgo=',
+  }
 };
 
 export default function RootLayout({
