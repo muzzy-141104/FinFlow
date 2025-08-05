@@ -156,8 +156,54 @@ const AnimatedWallet = ({ className = "" }) => {
     );
 };
 
+const AnimatedFeatureIcon = ({ feature }: { feature: string }) => {
+    if (feature === 'wallet') {
+        return (
+            <div className="w-24 h-24" style={{ perspective: '800px' }}>
+                <div className="relative w-full h-full transition-transform duration-500 group-hover:[transform:rotateY(15deg)_rotateX(-15deg)]" style={{ transformStyle: 'preserve-3d' }}>
+                    <div className="absolute w-20 h-16 bg-primary rounded-lg shadow-lg flex items-center justify-center" style={{ transform: 'translateZ(10px)'}}>
+                        <Wallet className="w-10 h-10 text-primary-foreground opacity-90" />
+                    </div>
+                </div>
+            </div>
+        )
+    }
+    if (feature === 'pie') {
+        return (
+            <div className="w-24 h-24" style={{ perspective: '800px' }}>
+                 <div className="relative w-full h-full transition-transform duration-500 group-hover:[transform:rotateY(15deg)_rotateX(-15deg)] group-hover:scale-110" style={{ transformStyle: 'preserve-3d' }}>
+                    <PieChart className="w-full h-full text-primary opacity-80" style={{ transform: 'rotateZ(-30deg)' }} />
+                    <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-accent rounded-full" style={{ clipPath: 'polygon(100% 0, 0 0, 0 100%)', transform: 'translateZ(15px) rotate(45deg) scale(0.8)' }}></div>
+                 </div>
+            </div>
+        )
+    }
+    if (feature === 'bars') {
+        return (
+            <div className="w-24 h-24 flex items-end justify-center gap-2" style={{ perspective: '800px' }}>
+                 <div className="relative w-full h-full transition-transform duration-500 group-hover:[transform:rotateY(15deg)_rotateX(-15deg)] group-hover:scale-110 flex items-end justify-center gap-2" style={{ transformStyle: 'preserve-3d' }}>
+                    <div className="w-4 h-1/2 bg-primary rounded-t-sm animate-bar-grow" style={{ animationDelay: '0s' }}></div>
+                    <div className="w-4 h-3/4 bg-accent rounded-t-sm animate-bar-grow" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-4 h-1/3 bg-primary/70 rounded-t-sm animate-bar-grow" style={{ animationDelay: '0.4s' }}></div>
+                 </div>
+                 <style jsx>{`
+                    @keyframes bar-grow {
+                        from { transform: scaleY(0); }
+                        to { transform: scaleY(1); }
+                    }
+                    .animate-bar-grow {
+                        transform-origin: bottom;
+                        animation: bar-grow 0.5s ease-out forwards;
+                    }
+                 `}</style>
+            </div>
+        )
+    }
+    return null;
+}
 
-const FeatureCard = ({ icon, title, description, delay }: { icon: React.ReactNode, title: string, description: string, delay: number }) => {
+
+const FeatureCard = ({ icon, title, description, delay, feature }: { icon: React.ReactNode, title: string, description: string, delay: number, feature: string }) => {
     const cardRef = useRef<HTMLDivElement>(null);
     const [isIntersecting, setIntersecting] = useState(false);
 
@@ -192,8 +238,8 @@ const FeatureCard = ({ icon, title, description, delay }: { icon: React.ReactNod
                 transitionDelay: `${delay}ms`,
             }}
         >
-            <div className="p-4 bg-primary/10 rounded-full transition-transform duration-300 group-hover:scale-110">
-                {icon}
+            <div className="h-24 w-24 flex items-center justify-center">
+                 <AnimatedFeatureIcon feature={feature} />
             </div>
             <h3 className="text-xl font-bold font-headline">{title}</h3>
             <p className="text-muted-foreground text-center">{description}</p>
@@ -264,18 +310,21 @@ export default function LandingPage() {
                                 title="Create & Manage Events"
                                 description="Organize your spending by creating separate events for trips, projects, or any occasion."
                                 delay={0}
+                                feature="wallet"
                             />
                              <FeatureCard 
                                 icon={<PieChart className="w-8 h-8 text-primary" />}
                                 title="Log Expenses Instantly"
                                 description="Quickly add expenses with our simple form, and watch them appear in real-time."
                                 delay={200}
+                                feature="pie"
                             />
                              <FeatureCard 
                                 icon={<TrendingUp className="w-8 h-8 text-primary" />}
                                 title="Visualize Your Spending"
                                 description="Interactive charts and dashboards break down expenses by category and over time."
                                 delay={400}
+                                feature="bars"
                             />
                         </div>
                     </div>
