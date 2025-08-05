@@ -52,9 +52,8 @@ export function EventCard({ event, onDelete }: EventCardProps) {
         setExpenseCount(snapshot.size);
         setTotalExpenses(total);
     }, (error) => {
-        // This will catch permission errors if the rules are not set up correctly.
-        // It prevents the app from crashing and logs the error for debugging.
-        // By request, we are hiding this error from the console.
+        // It's better to log errors for debugging, even if they are handled.
+        console.error(`Error fetching expenses for event ${event.id}:`, error);
     });
 
     // The cleanup function returned by useEffect.
