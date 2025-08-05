@@ -102,37 +102,55 @@ const FloatingCoins = () => {
 };
 
 
-// 3D Animated Pie Chart Component
-const AnimatedPieChart = ({ className = "" }) => {
+// 3D Animated Wallet Component
+const AnimatedWallet = ({ className = "" }) => {
     return (
         <div
             className={`group relative w-64 h-64 mx-auto cursor-pointer ${className}`}
             style={{ perspective: '1000px' }}
         >
             <div
-                className="relative w-full h-full rounded-full shadow-2xl transition-transform duration-500 group-hover:[transform:rotateY(15deg)_rotateX(-10deg)_scale(1.1)]"
+                className="relative w-full h-full transition-transform duration-500 group-hover:[transform:rotateY(10deg)_rotateX(-10deg)_scale(1.1)]"
                 style={{ transformStyle: 'preserve-3d' }}
             >
-                {/* Chart body */}
-                <div className="absolute inset-0 rounded-full" style={{
-                    backgroundImage: `conic-gradient(
-                        hsl(var(--chart-1)) 0% 40%, 
-                        hsl(var(--chart-2)) 40% 65%, 
-                        hsl(var(--chart-3)) 65% 90%, 
-                        hsl(var(--chart-4)) 90% 100%
-                    )`,
-                    transform: 'translateZ(-10px)'
-                }}></div>
-                 {/* Chart front face with hole */}
-                 <div className="absolute inset-0 rounded-full flex items-center justify-center" style={{ transform: 'translateZ(10px)' }}>
-                     <div className="w-3/4 h-3/4 rounded-full" style={{
-                         backgroundImage: `radial-gradient(circle at center, transparent 60%, hsl(var(--card)) 61%)`
-                     }}></div>
-                     <div className="absolute w-[60%] h-[60%] bg-card/80 backdrop-blur-sm rounded-full flex flex-col items-center justify-center">
-                         <span className="text-3xl font-bold text-primary">75%</span>
-                         <span className="text-sm text-muted-foreground">Budget Used</span>
-                     </div>
-                 </div>
+                {/* Main Wallet Body */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div
+                        className="w-48 h-36 bg-primary rounded-xl shadow-2xl flex items-center justify-center relative overflow-hidden"
+                        style={{ transform: 'translateZ(20px)' }}
+                    >
+                         <div className="absolute w-full h-1/3 top-0 bg-black/10"></div>
+                        <Wallet className="w-20 h-20 text-primary-foreground opacity-80" />
+                    </div>
+                </div>
+                
+                {/* Revolving Coins Layer 1 */}
+                <div className="absolute inset-0 w-full h-full" style={{ transformStyle: 'preserve-3d', animation: 'spin 12s linear infinite' }}>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg" style={{ transform: 'rotateY(70deg) translateZ(120px)' }}>
+                        <span className="text-amber-800 font-bold text-sm">$</span>
+                    </div>
+                </div>
+
+                {/* Revolving Coins Layer 2 */}
+                <div className="absolute inset-0 w-full h-full" style={{ transformStyle: 'preserve-3d', animation: 'spin 15s linear infinite reverse' }}>
+                     <div className="absolute bottom-10 left-1/4 -translate-x-1/2 w-6 h-6 bg-amber-400 rounded-full flex items-center justify-center shadow-lg" style={{ transform: 'rotateY(-60deg) translateZ(110px)' }}>
+                        <span className="text-amber-800 font-bold text-xs">$</span>
+                    </div>
+                </div>
+
+                 {/* Revolving Coins Layer 3 */}
+                 <div className="absolute inset-0 w-full h-full" style={{ transformStyle: 'preserve-3d', animation: 'spin 10s linear infinite' }}>
+                    <div className="absolute top-1/2 right-0 -translate-y-1/2 w-7 h-7 bg-amber-400 rounded-full flex items-center justify-center shadow-lg" style={{ transform: 'rotateY(90deg) translateZ(130px)' }}>
+                         <span className="text-amber-800 font-bold text-sm">$</span>
+                    </div>
+                </div>
+
+                <style jsx>{`
+                    @keyframes spin {
+                        from { transform: rotateY(0deg); }
+                        to { transform: rotateY(360deg); }
+                    }
+                `}</style>
             </div>
         </div>
     );
@@ -222,7 +240,7 @@ export default function LandingPage() {
                                 className="relative w-full h-[20rem] md:h-[24rem] lg:h-[28rem] flex items-center justify-center"
                                 style={{ perspective: '1000px' }}
                             >
-                                <AnimatedPieChart />
+                                <AnimatedWallet />
                             </div>
                         </div>
                     </div>
