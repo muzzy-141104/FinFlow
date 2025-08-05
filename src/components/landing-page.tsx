@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Wallet, PieChart, TrendingUp, DollarSign, CreditCard, BarChart3 } from "lucide-react";
+import { ArrowRight, Wallet, PieChart, TrendingUp } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 // 3D Floating Coins Component using Canvas
