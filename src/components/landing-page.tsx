@@ -4,8 +4,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, ArrowRight, Wallet, PieChart, TrendingUp } from "lucide-react";
+import { ArrowRight, Wallet, PieChart, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+
+const featureVariants = {
+  hidden: { opacity: 0, y: 50, rotateX: -30 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    rotateX: 0,
+    transition: { duration: 0.6, ease: "easeOut" }
+  }
+};
 
 export function LandingPage() {
   return (
@@ -49,12 +59,13 @@ export function LandingPage() {
               </motion.div>
               
               <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.8, rotateY: 30 }}
+                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
                 transition={{ duration: 1, delay: 0.2 }}
                 className="relative w-full h-[20rem] md:h-[24rem] lg:h-[28rem] group"
+                style={{ perspective: '1000px' }}
               >
-                <div className="w-full h-full rounded-2xl shadow-2xl overflow-hidden">
+                <div className="w-full h-full rounded-2xl shadow-2xl overflow-hidden transition-transform duration-500 group-hover:rotate-y-3">
                   <Image
                     src="/placeholders/event-1.jpg"
                     width={800}
@@ -82,27 +93,47 @@ export function LandingPage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="p-4 bg-primary/10 rounded-full">
-                  <Wallet className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold font-headline">Create & Manage Events</h3>
-                <p className="text-muted-foreground">Organize your spending by creating separate events for trips, projects, or any occasion.</p>
-              </div>
-              <div className="flex flex-col items-center space-y-4">
-                <div className="p-4 bg-primary/10 rounded-full">
-                    <PieChart className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold font-headline">Log Expenses Instantly</h3>
-                <p className="text-muted-foreground">Quickly add expenses with our simple form, and see them updated in real-time.</p>
-              </div>
-              <div className="flex flex-col items-center space-y-4">
-                <div className="p-4 bg-primary/10 rounded-full">
-                    <TrendingUp className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold font-headline">Visualize Your Spending</h3>
-                <p className="text-muted-foreground">Interactive charts and dashboards break down expenses by category and over time.</p>
-              </div>
+                <motion.div
+                    variants={featureVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.3 }}
+                    className="flex flex-col items-center space-y-4 p-6 rounded-lg bg-card/50 transition-all duration-300 hover:shadow-xl hover:bg-card"
+                >
+                    <div className="p-4 bg-primary/10 rounded-full">
+                        <Wallet className="w-8 h-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold font-headline">Create & Manage Events</h3>
+                    <p className="text-muted-foreground">Organize your spending by creating separate events for trips, projects, or any occasion.</p>
+                </motion.div>
+                <motion.div
+                    variants={featureVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ delay: 0.2 }}
+                    className="flex flex-col items-center space-y-4 p-6 rounded-lg bg-card/50 transition-all duration-300 hover:shadow-xl hover:bg-card"
+                >
+                    <div className="p-4 bg-primary/10 rounded-full">
+                        <PieChart className="w-8 h-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold font-headline">Log Expenses Instantly</h3>
+                    <p className="text-muted-foreground">Quickly add expenses with our simple form, and see them updated in real-time.</p>
+                </motion.div>
+                <motion.div
+                    variants={featureVariants}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ delay: 0.4 }}
+                    className="flex flex-col items-center space-y-4 p-6 rounded-lg bg-card/50 transition-all duration-300 hover:shadow-xl hover:bg-card"
+                >
+                    <div className="p-4 bg-primary/10 rounded-full">
+                        <TrendingUp className="w-8 h-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-bold font-headline">Visualize Your Spending</h3>
+                    <p className="text-muted-foreground">Interactive charts and dashboards break down expenses by category and over time.</p>
+                </motion.div>
             </div>
           </div>
         </section>
@@ -110,8 +141,10 @@ export function LandingPage() {
         {/* CTA Section */}
         <section className="w-full py-20 md:py-28">
           <div className="container px-4 md:px-6">
-            <div className="bg-primary text-primary-foreground rounded-2xl p-10 md:p-16 text-center shadow-xl">
-              <div className="space-y-6 max-w-2xl mx-auto">
+            <div className="bg-primary text-primary-foreground rounded-2xl p-10 md:p-16 text-center shadow-xl overflow-hidden relative">
+              <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full opacity-50"></div>
+              <div className="absolute -bottom-16 -right-5 w-48 h-48 bg-white/10 rounded-full opacity-50"></div>
+              <div className="space-y-6 max-w-2xl mx-auto relative z-10">
                 <h2 className="text-3xl font-bold font-headline tracking-tight lg:text-4xl">
                   Ready to Take Control of Your Finances?
                 </h2>
