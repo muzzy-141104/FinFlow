@@ -1,25 +1,20 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check ownership
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
     match /events/{eventId} {
-      // Create: User can only create an event for themselves
-      allow create: if isOwner(request.resource.data.userId);
+      // Allow a user to create an event if the userId matches their auth uid.
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
 
-      // Read, Update, Delete: User can only perform these actions on their own events
-      allow get, update, delete: if isOwner(resource.data.userId);
+      // Allow a user to read, update, or delete their own event document.
+      allow get, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      
+      // Allow a user to list events only if they are querying by their own userId.
+      allow list: if request.auth != null && request.query.get("where")[0][1] == "userId" && request.query.get("where")[0][2] == request.auth.uid;
 
-      // Nested expenses collection
+      // Rules for the nested 'expenses' subcollection
       match /expenses/{expenseId} {
-        // Allow full access to expenses if the user owns the parent event
-        allow read, write, delete: if isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+        // Allow full access to expenses if the user owns the parent event.
+        allow read, write: if request.auth != null && get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
       }
     }
   }
