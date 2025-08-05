@@ -70,6 +70,13 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                 const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
                 setEvent({ ...eventData, expenses: expensesData });
                 setIsLoading(false);
+            }, (error) => {
+              // This specific error is often a temporary state during hot-reloads.
+              // We log it but don't show a toast unless it persists.
+              if (error.code !== 'permission-denied') {
+                  toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
+              }
+              console.error("Error fetching expenses: ", error);
             });
 
             return () => unSubExpenses();
@@ -139,6 +146,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const downloadPdf = () => {
     if(!event) return;
     const doc = new jsPDF();
+    const totalExpensesValue = event?.expenses.reduce((sum, expense) => sum + expense.amount, 0) || 0;
     doc.text(`Expense Report for ${event.name}`, 14, 16);
     doc.autoTable({
         startY: 22,
@@ -151,7 +159,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                 e.category,
                 `${currencySymbol}${e.amount.toFixed(2)}`
             ]),
-        foot: [['', 'Total', '', `${currencySymbol}${totalExpenses.toFixed(2)}`]],
+        foot: [['', 'Total', '', `${currencySymbol}${totalExpensesValue.toFixed(2)}`]],
         showFoot: 'last_page',
         headStyles: { fillColor: [41, 128, 185] },
         footStyles: { fillColor: [41, 128, 185], textColor: 255 },
@@ -248,7 +256,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               Number of Expenses
             </CardTitle>
             <span className="text-muted-foreground">#</span>
-          </CardHeader>
+          </dCardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{event.expenses.length}</div>
             <p className="text-xs text-muted-foreground">
