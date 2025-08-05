@@ -242,7 +242,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
             <span className="text-muted-foreground">{currencySymbol}</span>
-          </dCardHeader>
+          </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{currencySymbol}{totalExpenses.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
@@ -256,7 +256,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               Number of Expenses
             </CardTitle>
             <span className="text-muted-foreground">#</span>
-          </dCardHeader>
+          </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{event.expenses.length}</div>
             <p className="text-xs text-muted-foreground">

@@ -1,9 +1,9 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,13 +34,11 @@ const formSchema = z.object({
 });
 
 type AddEventFormProps = {
-  onSave: (values: z.infer<typeof formSchema> & { imageUrl?: string }) => void;
+  onSave: (values: z.infer<typeof formSchema>) => void;
   onClose: () => void;
 };
 
 export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
-  const [imageUrl, setImageUrl] = useState<string | undefined>();
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,21 +48,9 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
     },
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   function onSubmit(values: z.infer<typeof formSchema>) {
-    onSave({ ...values, imageUrl });
+    onSave(values);
     form.reset();
-    setImageUrl(undefined);
     onClose();
   }
 
@@ -127,14 +113,7 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
             </FormItem>
           )}
         />
-        <FormItem>
-            <FormLabel>Event Image (Optional)</FormLabel>
-            <FormControl>
-                <Input type="file" accept="image/*" onChange={handleImageChange} />
-            </FormControl>
-            <FormMessage />
-        </FormItem>
-
+        
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
           <Button type="submit">Create Event</Button>
