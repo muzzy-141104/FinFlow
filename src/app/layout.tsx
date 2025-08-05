@@ -5,12 +5,32 @@ import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/header';
 import { AuthProvider } from '@/hooks/use-auth';
 
+const APP_NAME = "FinFlow";
+const APP_DEFAULT_TITLE = "FinFlow: Effortless Event Expense Tracking";
+const APP_TITLE_TEMPLATE = "%s | FinFlow";
+const APP_DESCRIPTION = "Manage your event expenses with ease. Create events, track spending, and visualize your finances for trips, projects, and more.";
+
 export const metadata: Metadata = {
-  title: 'FinFlow',
-  description: 'Manage your event expenses with ease.',
+  applicationName: APP_NAME,
+  title: {
+    default: APP_DEFAULT_TITLE,
+    template: APP_TITLE_TEMPLATE,
+  },
+  description: APP_DESCRIPTION,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_DEFAULT_TITLE,
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    icon: 'data:;base64,iVBORw0KGgo=',
-  }
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  keywords: ["expense tracker", "budgeting", "event expenses", "finance management", "trip budget"],
 };
 
 export default function RootLayout({
