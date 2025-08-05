@@ -1,16 +1,19 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // A user can only access events that belong to them.
-    // The event document must have a `userId` field that matches the user's UID.
     match /events/{eventId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
-      
-      // Rules for the expenses subcollection.
-      // A user can only access expenses for an event they own.
+      // A user can create an event if they are logged in and the event's userId matches their own.
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+      // A user can read, update, or delete an event if they own it.
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+
       match /expenses/{expenseId} {
-      	allow read, write: if request.auth != null && get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
+        // A user can create/update/delete an expense if they own the parent event.
+        allow write: if request.auth != null && get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
+        
+        // A user can read an expense if they own the parent event.
+        allow read: if request.auth != null && get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
       }
     }
   }
