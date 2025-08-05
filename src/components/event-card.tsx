@@ -51,8 +51,6 @@ export function EventCard({ event, onDelete }: EventCardProps) {
         
         setExpenseCount(snapshot.size);
         setTotalExpenses(total);
-    }, (error) => {
-      // This will catch any permission errors if the rules are incorrect.
     });
 
     // The cleanup function returned by useEffect.
