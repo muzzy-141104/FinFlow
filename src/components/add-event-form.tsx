@@ -30,8 +30,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const currencyKeys = Object.keys(currencies) as [Currency, ...Currency[]];
 
-// 1MB file size limit
-const MAX_FILE_SIZE = 1024 * 1024; 
+// 500KB file size limit to account for Base64 encoding overhead
+const MAX_FILE_SIZE = 500 * 1024; 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 
@@ -40,7 +40,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   currency: z.enum(currencyKeys),
   // The imageUrl is a base64 string, so we validate its length
-  imageUrl: z.string().max(MAX_FILE_SIZE * 1.4, "Image must be less than 1MB.").optional(),
+  imageUrl: z.string().max(MAX_FILE_SIZE * 1.4, "Image must be less than 500KB.").optional(),
 });
 
 type AddEventFormProps = {
@@ -67,7 +67,7 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
       if (file.size > MAX_FILE_SIZE) {
         form.setError("imageUrl", {
           type: "manual",
-          message: "Image must be smaller than 1MB.",
+          message: "Image must be smaller than 500KB.",
         });
         setFileName(null);
         return;
@@ -181,7 +181,7 @@ export function AddEventForm({ onSave, onClose }: AddEventFormProps) {
               <FormDescription>
                 {fileName 
                   ? `Selected: ${fileName}`
-                  : "Upload an image for your event. Max 1MB."
+                  : "Upload an image for your event. Max 500KB."
                 }
               </FormDescription>
               <FormMessage />
