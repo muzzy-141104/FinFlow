@@ -53,7 +53,6 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // This effect runs on the client after data is fetched to update the page title.
   useEffect(() => {
     if (event?.name) {
       document.title = `${event.name} | FinFlow`;
@@ -62,49 +61,42 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
   useEffect(() => {
     if (!user) {
-      // If there's no user, we can't fetch data.
       setIsLoading(false);
       return;
     }
     
     setIsLoading(true);
-    // Get a reference to the specific event document.
     const eventRef = doc(db, "events", eventId);
     
-    // Listen for changes to the event document.
-    // Firestore rules will automatically enforce that the user can only access this
-    // document if their UID matches the `userId` field on the document.
-    const unSubEvent = onSnapshot(eventRef, (doc) => {
-        if (doc.exists() && doc.data().userId === user.uid) {
-            const eventData = { id: doc.id, ...doc.data() } as Event;
-            
-            // Once we have the event and confirmed ownership, listen for its expenses.
-            const expensesQuery = collection(db, `events/${eventId}/expenses`);
-            const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
-                const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
-                setEvent({ ...eventData, expenses: expensesData });
-                setIsLoading(false);
-            }, (error) => {
-              console.error("Error fetching expenses: ", error);
-              toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
-              setIsLoading(false);
-            });
-
-            // Return the cleanup function for the expenses listener
-            return () => unSubExpenses();
-        } else {
-            // This case handles both when the document doesn't exist and when the user is not the owner.
-            toast({ title: "Access Denied", description: "Event not found or you don't have permission to view it.", variant: "destructive" });
-            setEvent(null);
-            setIsLoading(false);
+    const unSubEvent = onSnapshot(eventRef, (eventDoc) => {
+        if (!eventDoc.exists() || eventDoc.data().userId !== user.uid) {
+          toast({ title: "Access Denied", description: "Event not found or you don't have permission.", variant: "destructive" });
+          setEvent(null);
+          setIsLoading(false);
+          return;
         }
+
+        const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
+        
+        const expensesQuery = collection(db, `events/${eventId}/expenses`);
+        const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
+            const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
+            setEvent({ ...eventData, expenses: expensesData });
+            setIsLoading(false);
+        }, (error) => {
+          console.error("Error fetching expenses: ", error);
+          toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
+          setIsLoading(false);
+        });
+
+        return () => unSubExpenses();
+
     }, (error) => {
         console.error("Error fetching event: ", error);
         toast({ title: "Error", description: "Failed to fetch event data.", variant: "destructive" });
         setIsLoading(false);
     });
 
-    // Clean up the top-level event listener on unmount or when dependencies change.
     return () => unSubEvent();
   }, [eventId, user, toast]);
 

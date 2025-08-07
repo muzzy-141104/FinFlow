@@ -20,7 +20,7 @@ import {
 } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, collectionGroup } from "firebase/firestore";
 import type { Expense, Event } from "@/lib/types";
 import { AlertTriangle, TrendingUp, Wallet } from "lucide-react";
 
@@ -66,7 +66,6 @@ export function ExpenseAnalysisDashboard() {
   const { toast } = useToast();
 
   React.useEffect(() => {
-    // Don't fetch data if there is no authenticated user.
     if (!user) {
       setIsLoading(false);
       setEvents([]);
@@ -77,24 +76,36 @@ export function ExpenseAnalysisDashboard() {
     const fetchAllData = async () => {
         setIsLoading(true);
         try {
-            // Step 1: Securely fetch all events owned by the current user.
             const eventsQuery = query(collection(db, "events"), where("userId", "==", user.uid));
             const eventsSnapshot = await getDocs(eventsQuery);
             const userEvents = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
             setEvents(userEvents);
 
-            // Step 2: Loop through the events the user owns and fetch their expenses.
-            // This is secure because we're only querying subcollections of events we've already
-            // confirmed the user has access to.
-            let allExpenses: Expense[] = [];
-            for (const eventDoc of eventsSnapshot.docs) {
-                const expensesQuery = collection(db, `events/${eventDoc.id}/expenses`);
-                const expensesSnapshot = await getDocs(expensesQuery);
-                const eventExpenses = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
-                allExpenses = [...allExpenses, ...eventExpenses];
+            if (userEvents.length === 0) {
+              setExpenses([]);
+              setIsLoading(false);
+              return;
             }
 
-            setExpenses(allExpenses);
+            // Use a collection group query to fetch all expenses from all subcollections
+            // owned by the user. This is more efficient than N+1 queries.
+            // This requires a specific Firestore index.
+            const expensesQuery = query(collectionGroup(db, 'expenses'), where('userId', '==', user.uid));
+            const allExpensesSnapshot = await getDocs(expensesQuery);
+            const allExpenses = allExpensesSnapshot.docs.map(doc => doc.data() as Expense);
+
+            // The above query is much better, but requires composite index on `expenses` collection group.
+            // Let's stick to a safer, albeit less performant method for now to avoid needing index creation.
+            let allExpensesData: Expense[] = [];
+            for (const event of userEvents) {
+              const expensesCol = collection(db, "events", event.id, "expenses");
+              const expensesSnap = await getDocs(expensesCol);
+              expensesSnap.forEach(doc => {
+                allExpensesData.push({ id: doc.id, ...doc.data() } as Expense);
+              });
+            }
+            setExpenses(allExpensesData);
+
         } catch (error) {
             console.error("Error fetching analytics data:", error);
             toast({
@@ -127,7 +138,6 @@ export function ExpenseAnalysisDashboard() {
       } else if (period === "yearly") {
         key = format(date, "yyyy");
       }
-      // WARNING: This does not convert currencies. It's a simple sum of amounts.
       dataMap.set(key, (dataMap.get(key) || 0) + expense.amount);
     });
     
@@ -135,7 +145,6 @@ export function ExpenseAnalysisDashboard() {
         .map(([date, total]) => ({ date, total }))
         .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
-    // Format the label to be more readable
     if (period === 'daily') {
         return sortedData.map(d => ({ ...d, date: format(parseISO(d.date), "MMM d, yyyy")}));
     }
@@ -255,7 +264,6 @@ export function ExpenseAnalysisDashboard() {
                     tickMargin={8}
                     tickFormatter={(value, index) => {
                       if (period === 'daily' && chartData.length > 10) {
-                        // Show fewer labels if there are many days
                         return index % Math.ceil(chartData.length / 10) === 0 ? value : '';
                       }
                       return value;
