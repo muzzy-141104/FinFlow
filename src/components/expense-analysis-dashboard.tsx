@@ -100,13 +100,16 @@ export function ExpenseAnalysisDashboard() {
             }
             setExpenses(allExpensesData);
 
-        } catch (error) {
-            console.error("Error fetching analytics data:", error);
-            toast({
-                title: "Error",
-                description: "Failed to load analytics data.",
-                variant: "destructive"
-            });
+        } catch (error: any) {
+            // Ignore permission errors that can happen during logout.
+            if (error.code !== 'permission-denied') {
+              console.error("Error fetching analytics data:", error);
+              toast({
+                  title: "Error",
+                  description: "Failed to load analytics data.",
+                  variant: "destructive"
+              });
+            }
         } finally {
             setIsLoading(false);
         }

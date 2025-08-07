@@ -60,51 +60,68 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   }, [event?.name]);
 
   useEffect(() => {
-    if (!user) {
-      // Don't fetch if there is no user.
-      setIsLoading(false);
-      return;
-    }
-    
-    setIsLoading(true);
-    const eventRef = doc(db, "events", eventId);
-    
-    // Subscribe to the event document
-    const unSubEvent = onSnapshot(eventRef, (eventDoc) => {
-        if (!eventDoc.exists() || eventDoc.data().userId !== user.uid) {
-          toast({ title: "Access Denied", description: "Event not found or you don't have permission.", variant: "destructive" });
-          setEvent(null);
-          setIsLoading(false);
-          return;
-        }
+    // This variable will hold the combined cleanup function.
+    let unsubscribe: (() => void) | undefined;
 
-        const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
-        
-        // Once we have the event and confirmed ownership, fetch expenses
-        const expensesQuery = collection(db, `events/${eventId}/expenses`);
-        const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
-            const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
-            // Combine event data and expenses data into a single state update
-            setEvent({ ...eventData, expenses: expensesData });
-            setIsLoading(false);
+    if (user) {
+        setIsLoading(true);
+        const eventRef = doc(db, "events", eventId);
+
+        const unSubEvent = onSnapshot(eventRef, (eventDoc) => {
+            if (!eventDoc.exists() || eventDoc.data().userId !== user.uid) {
+                toast({ title: "Access Denied", description: "Event not found or you don't have permission.", variant: "destructive" });
+                setEvent(null);
+                setIsLoading(false);
+                return;
+            }
+
+            const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
+            const expensesQuery = collection(db, `events/${eventId}/expenses`);
+
+            const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
+                const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
+                setEvent({ ...eventData, expenses: expensesData });
+                setIsLoading(false);
+            }, (error) => {
+                // Ignore permission errors that can happen during logout.
+                if (error.code !== 'permission-denied') {
+                    console.error("Error fetching expenses: ", error);
+                    toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
+                }
+                setIsLoading(false);
+            });
+
+            // Combine the cleanup functions.
+            unsubscribe = () => {
+                unSubEvent();
+                unSubExpenses();
+            };
+
         }, (error) => {
-          console.error("Error fetching expenses: ", error);
-          toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
-          setIsLoading(false);
+            // Ignore permission errors that can happen during logout.
+            if (error.code !== 'permission-denied') {
+                console.error("Error fetching event: ", error);
+                toast({ title: "Error", description: "Failed to fetch event data.", variant: "destructive" });
+            }
+            setIsLoading(false);
         });
 
-        // Return the cleanup function for the expenses listener
-        return () => unSubExpenses();
-
-    }, (error) => {
-        console.error("Error fetching event: ", error);
-        toast({ title: "Error", description: "Failed to fetch event data.", variant: "destructive" });
+        // The top-level cleanup function for the event listener itself.
+        unsubscribe = unSubEvent;
+    } else {
+        // If there's no user, stop loading and clear data.
         setIsLoading(false);
-    });
+        setEvent(null);
+    }
 
-    // Return the cleanup function for the event listener
-    return () => unSubEvent();
-  }, [eventId, user, toast]);
+    // Return a single cleanup function that will be called on unmount or when dependencies change.
+    return () => {
+        if (unsubscribe) {
+            unsubscribe();
+        }
+    };
+}, [eventId, user, toast]);
+
 
   const currencySymbol = useMemo(() => {
     if (!event) return '$';
