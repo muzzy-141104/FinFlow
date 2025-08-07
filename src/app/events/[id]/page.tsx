@@ -1,5 +1,7 @@
 
 import EventDetailClient from "@/components/event-detail-client";
+import { getAdminDb } from "@/lib/firebase-admin";
+import { type Event } from "@/lib/types";
 import { Metadata } from "next";
 
 type Props = {
@@ -7,14 +9,31 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  // This function runs on the server and does not have user authentication.
-  // Therefore, we cannot fetch specific event data here due to security rules.
-  // We return a generic title, and the client component will update it dynamically
-  // after securely loading the event data.
-  return {
-    title: "Event Details | FinFlow",
-    description: "View and manage the expenses for your event.",
-  };
+  try {
+    const adminDb = getAdminDb();
+    const eventRef = adminDb.collection("events").doc(params.id);
+    const eventDoc = await eventRef.get();
+
+    if (!eventDoc.exists) {
+      return {
+        title: "Event Not Found",
+        description: "The event you are looking for does not exist.",
+      };
+    }
+
+    const event = eventDoc.data() as Event;
+    return {
+      title: `${event.name} | FinFlow`,
+      description: `View and manage expenses for ${event.name}. ${event.description}`,
+    };
+  } catch (error) {
+    console.error("Error generating metadata:", error);
+    // Return a generic title if there's an error (e.g., config issue)
+    return {
+      title: "Event Details | FinFlow",
+      description: "View and manage the expenses for your event.",
+    };
+  }
 }
 
 
