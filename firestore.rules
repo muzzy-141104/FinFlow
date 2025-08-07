@@ -1,27 +1,10 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper functions to make rules cleaner
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isEventOwner(eventId) {
-      // Check if the requesting user's ID matches the userId on the event document.
-      return get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
-    }
-
-    // Rules for the 'events' collection
-    match /events/{eventId} {
-      allow read, update, delete: if isSignedIn() && isEventOwner(eventId);
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-
-      // Rules for the 'expenses' subcollection
-      match /expenses/{expenseId} {
-        allow read, create, delete: if isSignedIn() && isEventOwner(eventId);
-      }
+    // WARNING: This allows any client to read and write to the entire database.
+    // This is for debugging only and is not secure.
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }
