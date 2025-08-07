@@ -6,7 +6,7 @@ if (!admin.apps.length) {
   try {
     // Check if the environment variable is set.
     if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set.');
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. Please add it to your .env.local file.');
     }
     const serviceAccount = JSON.parse(
       process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string
@@ -18,11 +18,23 @@ if (!admin.apps.length) {
   } catch (error: any) {
     console.error('Firebase admin initialization error', error.stack);
     // Do not throw an error here, as it can crash the build process
-    // where environment variables might not be available.
+    // where environment variables might not be available. We will rely on subsequent
+    // functions to fail gracefully if the admin app is not initialized.
   }
 }
 
-const getAdminDb = () => admin.firestore();
-const getAdminAuth = () => admin.auth();
+const getAdminDb = () => {
+    if (!admin.apps.length) {
+        // This will be caught by the calling function's try...catch block
+        throw new Error("Firebase Admin SDK not initialized. Check your environment variables and server logs for the original error.");
+    }
+    return admin.firestore();
+}
+const getAdminAuth = () => {
+    if (!admin.apps.length) {
+        throw new Error("Firebase Admin SDK not initialized.");
+    }
+    return admin.auth();
+};
 
 export { getAdminDb, getAdminAuth };
