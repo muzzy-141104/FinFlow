@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Checks if the requesting user's ID matches the userId on the document being accessed
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Main collection rule for 'events'
+    match /events/{eventId} {
+      // READ: 
+      // A user can read their own single event document.
+      allow get: if isSignedIn() && isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+      // A user can list events only if they query by their own userId.
+      allow list: if isSignedIn() && isOwner(request.query.filters.userId);
+      
+      // CREATE:
+      // Allow creating an event if the user is signed in and is setting themselves as the owner.
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+
+      // UPDATE, DELETE:
+      // Allow updating or deleting an event only if the user is the owner of the existing document.
+      allow update, delete: if isSignedIn() && isOwner(resource.data.userId);
+
+      // Rules for the 'expenses' subcollection, nested under an event
+      match /expenses/{expenseId} {
+        // Any read/write on an expense requires checking the ownership of the PARENT event.
+        allow read, write: if isSignedIn() && isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+      }
+    }
+  }
+}
