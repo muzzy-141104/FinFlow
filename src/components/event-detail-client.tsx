@@ -279,7 +279,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               Total transactions recorded
             </p>
           </CardContent>
-        </card>
+        </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-5">
