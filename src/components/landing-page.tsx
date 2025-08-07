@@ -371,7 +371,7 @@ export default function LandingPage() {
                         </p>
                         <div className="hidden sm:block border-l h-4 border-muted-foreground/50"></div>
                         <a href="https://github.com/muzzy-141104" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-2">
-                           <Github className="w-4 h-4" /> Created by Muzzy
+                           <Github className="w-4 h-4" /> Created by Muzammil
                         </a>
                     </div>
                 </footer>
