@@ -86,17 +86,11 @@ export function ExpenseAnalysisDashboard() {
               setIsLoading(false);
               return;
             }
-
-            // Use a collection group query to fetch all expenses from all subcollections
-            // owned by the user. This is more efficient than N+1 queries.
-            // This requires a specific Firestore index.
-            const expensesQuery = query(collectionGroup(db, 'expenses'), where('userId', '==', user.uid));
-            const allExpensesSnapshot = await getDocs(expensesQuery);
-            const allExpenses = allExpensesSnapshot.docs.map(doc => doc.data() as Expense);
-
-            // The above query is much better, but requires composite index on `expenses` collection group.
-            // Let's stick to a safer, albeit less performant method for now to avoid needing index creation.
+            
             let allExpensesData: Expense[] = [];
+            // This is safer than a collection group query if indexes aren't guaranteed.
+            // It makes N+1 queries (1 for events, N for each event's expenses).
+            // For a large number of events, this could be slow, but it is reliable.
             for (const event of userEvents) {
               const expensesCol = collection(db, "events", event.id, "expenses");
               const expensesSnap = await getDocs(expensesCol);

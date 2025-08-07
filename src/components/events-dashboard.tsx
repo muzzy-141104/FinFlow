@@ -42,6 +42,8 @@ export function EventsDashboard() {
 
   useEffect(() => {
     if (!user) {
+      // If there's no user, we stop loading and clear events.
+      // This happens on initial load before auth is checked, and on logout.
       setIsLoading(false);
       setEvents([]);
       return;
@@ -60,6 +62,7 @@ export function EventsDashboard() {
       setIsLoading(false);
     });
 
+    // Cleanup subscription on component unmount
     return () => unsubscribe();
   }, [user, toast]);
 

@@ -61,10 +61,9 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
   useEffect(() => {
     if (!user) {
-      // If there's no user, we shouldn't try to fetch data.
-      // Set loading to false after a short delay to avoid flickering.
-      const timer = setTimeout(() => setIsLoading(false), 200);
-      return () => clearTimeout(timer);
+      // Don't fetch if there is no user.
+      setIsLoading(false);
+      return;
     }
     
     setIsLoading(true);
