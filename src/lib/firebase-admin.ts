@@ -4,6 +4,10 @@ import * as admin from 'firebase-admin';
 // This guard prevents re-initializing the app in hot-reload environments.
 if (!admin.apps.length) {
   try {
+    // Check if the environment variable is set.
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set.');
+    }
     const serviceAccount = JSON.parse(
       process.env.FIREBASE_SERVICE_ACCOUNT_KEY as string
     );
@@ -13,7 +17,8 @@ if (!admin.apps.length) {
     });
   } catch (error: any) {
     console.error('Firebase admin initialization error', error.stack);
-    throw new Error('Could not initialize Firebase Admin SDK. Please check your service account credentials.');
+    // Do not throw an error here, as it can crash the build process
+    // where environment variables might not be available.
   }
 }
 
