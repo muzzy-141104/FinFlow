@@ -45,6 +45,7 @@ import {
   } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LoadingSpinner } from "./loading-spinner";
+import { useToast } from "@/hooks/use-toast";
 
 
 const chartConfig = {
@@ -62,8 +63,10 @@ export function ExpenseAnalysisDashboard() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [period, setPeriod] = React.useState<Period>("monthly");
   const { user } = useAuth();
+  const { toast } = useToast();
 
   React.useEffect(() => {
+    // Don't fetch data if there is no authenticated user.
     if (!user) {
       setIsLoading(false);
       setEvents([]);
@@ -73,27 +76,38 @@ export function ExpenseAnalysisDashboard() {
 
     const fetchAllData = async () => {
         setIsLoading(true);
-        // This query is secured by the user's ID.
-        const eventsQuery = query(collection(db, "events"), where("userId", "==", user.uid));
-        const eventsSnapshot = await getDocs(eventsQuery);
-        const userEvents = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
-        setEvents(userEvents);
+        try {
+            // Step 1: Securely fetch all events owned by the current user.
+            const eventsQuery = query(collection(db, "events"), where("userId", "==", user.uid));
+            const eventsSnapshot = await getDocs(eventsQuery);
+            const userEvents = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+            setEvents(userEvents);
 
-        let allExpenses: Expense[] = [];
-        // Loop through the secured events to get their expenses.
-        // This is secure because we're only querying subcollections of events the user owns.
-        for (const eventDoc of eventsSnapshot.docs) {
-            const expensesQuery = collection(db, `events/${eventDoc.id}/expenses`);
-            const expensesSnapshot = await getDocs(expensesQuery);
-            const eventExpenses = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
-            allExpenses = [...allExpenses, ...eventExpenses];
+            // Step 2: Loop through the events the user owns and fetch their expenses.
+            // This is secure because we're only querying subcollections of events we've already
+            // confirmed the user has access to.
+            let allExpenses: Expense[] = [];
+            for (const eventDoc of eventsSnapshot.docs) {
+                const expensesQuery = collection(db, `events/${eventDoc.id}/expenses`);
+                const expensesSnapshot = await getDocs(expensesQuery);
+                const eventExpenses = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+                allExpenses = [...allExpenses, ...eventExpenses];
+            }
+
+            setExpenses(allExpenses);
+        } catch (error) {
+            console.error("Error fetching analytics data:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load analytics data.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsLoading(false);
         }
-
-        setExpenses(allExpenses);
-        setIsLoading(false);
     }
     fetchAllData();
-  }, [user]);
+  }, [user, toast]);
 
   const chartData = React.useMemo(() => {
     if (expenses.length === 0) return [];

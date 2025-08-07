@@ -41,20 +41,21 @@ export function EventsDashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // If there is no user, we don't need to do anything.
+    // If there is no user, we are not authenticated, so stop loading and show empty state.
     if (!user) {
       setIsLoading(false);
       setEvents([]); // Clear any previous user's events
       return;
     }
 
-    // Set up the Firestore query with the user's ID.
-    // This is the most critical part for security.
+    // At this point, `user` object is available. Set up the secure Firestore query.
+    // This is the most critical part for security and for fixing the read error.
     const q = query(collection(db, "events"), where("userId", "==", user.uid));
     
     setIsLoading(true);
 
-    // Use onSnapshot to listen for real-time updates.
+    // onSnapshot listens for real-time updates. It will fire once with the initial
+    // data, and then again whenever the data changes.
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const userEvents: Event[] = [];
         querySnapshot.forEach((doc: DocumentData) => {
@@ -63,12 +64,14 @@ export function EventsDashboard() {
         setEvents(userEvents.sort((a, b) => a.name.localeCompare(b.name)));
         setIsLoading(false);
     }, (error) => {
+        // This will catch any unexpected errors, including permission errors if the rules are misconfigured.
         console.error("Error fetching events: ", error);
-        toast({ title: "Error", description: "Could not fetch your events. Please try again later.", variant: "destructive" });
+        toast({ title: "Error", description: "Could not fetch your events. Please check your connection or try again later.", variant: "destructive" });
         setIsLoading(false);
     });
 
-    // Cleanup the listener when the component unmounts or the user changes.
+    // The cleanup function is critical. It unsubscribes from the listener
+    // when the component unmounts or when the `user` dependency changes.
     return () => unsubscribe();
   }, [user, toast]);
 
@@ -81,7 +84,7 @@ export function EventsDashboard() {
 
     try {
         await addDoc(collection(db, "events"), {
-            userId: user.uid,
+            userId: user.uid, // This field is required by our security rules for writes
             name: values.name,
             description: values.description || "",
             imageUrl: values.imageUrl || getRandomPlaceholder(),
@@ -101,7 +104,10 @@ export function EventsDashboard() {
     }
     
     try {
+      // Deleting requires a reference to the specific document
       const eventRef = doc(db, "events", eventId);
+      
+      // Before deleting the event, we must delete all expenses in its subcollection
       const expensesQuery = collection(eventRef, "expenses");
       const expensesSnapshot = await getDocs(expensesQuery);
   
@@ -111,6 +117,7 @@ export function EventsDashboard() {
         batch.delete(expenseDoc.ref);
       });
   
+      // Then, delete the event document itself
       batch.delete(eventRef);
   
       await batch.commit();
