@@ -95,6 +95,11 @@ export function EventsDashboard() {
   };
 
   const deleteEvent = async (eventId: string) => {
+    if (!user) {
+      toast({ title: "Not Authenticated", description: "You must be logged in to delete an event.", variant: "destructive" });
+      return;
+    }
+    
     try {
       const eventRef = doc(db, "events", eventId);
       const expensesQuery = collection(eventRef, "expenses");
