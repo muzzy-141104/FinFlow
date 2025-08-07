@@ -6,6 +6,7 @@ import { Event } from '@/lib/types';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = 'https://finflow-knjbt.web.app';
 
+  // These are the public-facing pages of the application.
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: siteUrl,
@@ -27,15 +28,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // This part of the sitemap generation runs on the server without user authentication.
-  // The Firestore security rules will correctly block this request to protect user data.
+  // The sitemap generation runs on the server without user authentication.
+  // The Firestore security rules will correctly block the request below to protect user data.
   // The try/catch block ensures that the build does not fail and that only public
-  // pages are included in the sitemap. This is the expected and secure behavior.
+  // pages are included in the sitemap. This is expected and secure behavior.
   try {
     const eventsCollectionRef = collection(db, "events");
-    const querySnapshot = await getDocs(eventsCollection_ref);
+    // This query will be blocked by security rules, which is the intended behavior.
+    const querySnapshot = await getDocs(eventsCollectionRef);
     const eventsRoutes = querySnapshot.docs.map(doc => {
-      // This part will likely not be reached due to security rules, but is here for completeness.
       return {
         url: `${siteUrl}/events/${doc.id}`,
         lastModified: new Date(), 
@@ -46,8 +47,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     
     return [...staticRoutes, ...eventsRoutes];
   } catch (error) {
-    // We expect a permission-denied error here, so we'll just return the static routes.
-    // console.error("Sitemap: Could not fetch events due to permissions. This is expected for private data.");
+    // This catch block is expected to be reached during the build process
+    // because of the Firestore security rules. We return only the static routes.
     return staticRoutes;
   }
 }

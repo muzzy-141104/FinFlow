@@ -1,7 +1,4 @@
 import EventDetailClient from "@/components/event-detail-client";
-import { db } from "@/lib/firebase";
-import { Event } from "@/lib/types";
-import { doc, getDoc } from "firebase/firestore";
 import { Metadata } from "next";
 
 type Props = {
@@ -11,10 +8,10 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // This function runs on the server and does not have user authentication.
   // Therefore, we cannot fetch specific event data here due to security rules.
-  // We will set a generic title and description, and the client component
-  // will update the title dynamically after loading the event.
+  // We return a generic title, and the client component will update it dynamically
+  // after securely loading the event data.
   return {
-    title: "Event Details",
+    title: "Event Details | FinFlow",
     description: "View and manage the expenses for your event.",
   };
 }

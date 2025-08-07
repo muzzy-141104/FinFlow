@@ -10,7 +10,6 @@ import {
 } from "react";
 import { User, onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useRouter, usePathname } from "next/navigation";
 
 type AuthContextType = {
   user: User | null;
@@ -25,22 +24,15 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const pathname = usePathname();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
-      // If user is not logged in and not on the login page, redirect to login page.
-      // The root path "/" is now the public landing page, so we don't redirect from there.
-      if (!user && pathname !== "/login" && pathname !== "/") {
-        router.push("/login");
-      }
     });
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

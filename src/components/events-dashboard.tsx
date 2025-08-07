@@ -37,39 +37,47 @@ export function EventsDashboard() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    // If the user object is available, we set up the listener.
-    if (user) {
-      setIsLoading(true);
-      const q = query(collection(db, "events"), where("userId", "==", user.uid));
-      const unsubscribe = onSnapshot(q, (querySnapshot) => {
-          const userEvents: Event[] = [];
-          querySnapshot.forEach((doc: DocumentData) => {
-              userEvents.push({ id: doc.id, ...doc.data() } as Event);
-          });
-          setEvents(userEvents.sort((a, b) => a.name.localeCompare(b.name)));
-          setIsLoading(false);
-      }, (error) => {
-          console.error("Error fetching events: ", error);
-          toast({ title: "Error", description: "Could not fetch events.", variant: "destructive" });
-          setIsLoading(false);
-      });
-
-      // Cleanup the listener when the component unmounts or the user changes.
-      return () => unsubscribe();
-    } else if (!authLoading) {
-      // If auth is done loading and there's no user, clear events and stop loading.
-      setEvents([]);
+    // If there is no user, we don't need to do anything.
+    if (!user) {
       setIsLoading(false);
+      setEvents([]); // Clear any previous user's events
+      return;
     }
-  }, [user, authLoading, toast]);
+
+    // Set up the Firestore query with the user's ID.
+    // This is the most critical part for security.
+    const q = query(collection(db, "events"), where("userId", "==", user.uid));
+    
+    setIsLoading(true);
+
+    // Use onSnapshot to listen for real-time updates.
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const userEvents: Event[] = [];
+        querySnapshot.forEach((doc: DocumentData) => {
+            userEvents.push({ id: doc.id, ...doc.data() } as Event);
+        });
+        setEvents(userEvents.sort((a, b) => a.name.localeCompare(b.name)));
+        setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching events: ", error);
+        toast({ title: "Error", description: "Could not fetch your events. Please try again later.", variant: "destructive" });
+        setIsLoading(false);
+    });
+
+    // Cleanup the listener when the component unmounts or the user changes.
+    return () => unsubscribe();
+  }, [user, toast]);
 
 
   const addEvent = async (values: z.infer<typeof formSchema>) => {
-    if (!user) return;
+    if (!user) {
+      toast({ title: "Not Authenticated", description: "You must be logged in to create an event.", variant: "destructive" });
+      return;
+    }
 
     try {
         await addDoc(collection(db, "events"), {
@@ -79,10 +87,10 @@ export function EventsDashboard() {
             imageUrl: values.imageUrl || getRandomPlaceholder(),
             currency: values.currency,
         });
-        toast({ title: "Event Created", description: `"${values.name}" has been created.` });
+        toast({ title: "Event Created", description: `"${values.name}" has been successfully created.` });
     } catch(e) {
         console.error("Error adding document: ", e);
-        toast({ title: "Error", description: "Could not create event.", variant: "destructive" });
+        toast({ title: "Error", description: "Could not create the event.", variant: "destructive" });
     }
   };
 
@@ -105,7 +113,7 @@ export function EventsDashboard() {
       toast({ title: "Event Deleted", description: "The event and all its expenses have been deleted." });
     } catch (error) {
       console.error("Error deleting event: ", error);
-      toast({ title: "Error", description: "Could not delete event.", variant: "destructive" });
+      toast({ title: "Error", description: "Could not delete the event.", variant: "destructive" });
     }
   };
   

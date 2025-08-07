@@ -45,6 +45,7 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
     }
     
     try {
+        // This query is secured by the user's ID.
         const eventsQuery = query(collection(db, "events"), where("userId", "==", user.uid));
         const eventsSnapshot = await getDocs(eventsQuery);
         

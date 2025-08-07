@@ -2,29 +2,30 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper functions for cleaner, more reusable rules
+
+    // Helper function to check if a user is signed in.
     function isSignedIn() {
       return request.auth != null;
     }
 
+    // Helper function to check if the requesting user is the owner of the event.
     function isEventOwner(eventId) {
-      // Check if the requesting user's ID matches the userId on the event document.
       return get(/databases/$(database)/documents/events/$(eventId)).data.userId == request.auth.uid;
     }
 
-    // Rules for the 'events' collection
+    // Rules for the 'events' collection.
     match /events/{eventId} {
-      // Allow creation if the user is signed in and the event's userId matches their own.
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Users can only read, create, update, or delete events if they are the owner.
+      allow read, write: if isSignedIn() && request.auth.uid == resource.data.userId;
+      
+      // A user creating an event must be the owner.
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
 
-      // Allow read and delete only for the user who owns the event.
-      allow read, delete: if isSignedIn() && isEventOwner(eventId);
-
-      // Rules for the 'expenses' subcollection nested under an event
+      // Rules for the 'expenses' subcollection.
       match /expenses/{expenseId} {
-        // Allow read, create, and delete of expenses only for the owner of the parent event.
-        allow read, create, delete: if isSignedIn() && isEventOwner(eventId);
+        // Users can list, get, create, update, and delete expenses
+        // only if they are the owner of the parent event.
+        allow read, write: if isSignedIn() && isEventOwner(eventId);
       }
     }
   }

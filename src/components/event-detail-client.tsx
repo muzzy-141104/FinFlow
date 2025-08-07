@@ -51,6 +51,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
+  // This effect runs on the client after data is fetched to update the page title.
   useEffect(() => {
     if (event?.name) {
       document.title = `${event.name} | FinFlow`;
@@ -59,11 +60,15 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
   useEffect(() => {
     setIsLoading(true);
+    // Get a reference to the specific event document.
+    // Security is handled by Firestore rules, which will check if the
+    // logged-in user is the owner of this document.
     const eventRef = doc(db, "events", eventId);
     
     const unSubEvent = onSnapshot(eventRef, (doc) => {
         if (doc.exists()) {
             const eventData = { id: doc.id, ...doc.data() } as Event;
+            // Once we have the event, we can listen for its expenses.
             const expensesQuery = collection(db, `events/${eventId}/expenses`);
             
             const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
@@ -71,25 +76,24 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
                 setEvent({ ...eventData, expenses: expensesData });
                 setIsLoading(false);
             }, (error) => {
-              // This specific error is often a temporary state during hot-reloads.
-              // We log it but don't show a toast unless it persists.
-              if (error.code !== 'permission-denied') {
-                  toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
-              }
               console.error("Error fetching expenses: ", error);
+              toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
+              setIsLoading(false);
             });
 
             return () => unSubExpenses();
         } else {
+            // This can happen if the user does not have permission or the event doesn't exist.
             setEvent(null);
             setIsLoading(false);
         }
     }, (error) => {
         console.error("Error fetching event: ", error);
+        toast({ title: "Permission Error", description: "You might not have access to this event.", variant: "destructive" });
         setIsLoading(false);
-        toast({ title: "Error", description: "Failed to fetch event data.", variant: "destructive" });
     });
 
+    // Clean up the top-level listener on unmount.
     return () => unSubEvent();
   }, [eventId, toast]);
 
@@ -186,9 +190,9 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   if (!event) {
     return (
       <div className="text-center py-20">
-        <h2 className="text-2xl font-semibold mb-2">Event not found</h2>
+        <h2 className="text-2xl font-semibold mb-2">Event Not Found</h2>
         <p className="text-muted-foreground mb-4">
-          The event you are looking for does not exist.
+          The event you're looking for either doesn't exist or you don't have permission to view it.
         </p>
         <Button asChild>
           <Link href="/">Go to Dashboard</Link>

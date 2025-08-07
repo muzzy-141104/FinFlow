@@ -66,17 +66,22 @@ export function ExpenseAnalysisDashboard() {
   React.useEffect(() => {
     if (!user) {
       setIsLoading(false);
+      setEvents([]);
+      setExpenses([]);
       return;
     };
 
     const fetchAllData = async () => {
         setIsLoading(true);
+        // This query is secured by the user's ID.
         const eventsQuery = query(collection(db, "events"), where("userId", "==", user.uid));
         const eventsSnapshot = await getDocs(eventsQuery);
         const userEvents = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
         setEvents(userEvents);
 
         let allExpenses: Expense[] = [];
+        // Loop through the secured events to get their expenses.
+        // This is secure because we're only querying subcollections of events the user owns.
         for (const eventDoc of eventsSnapshot.docs) {
             const expensesQuery = collection(db, `events/${eventDoc.id}/expenses`);
             const expensesSnapshot = await getDocs(expensesQuery);
