@@ -1,3 +1,4 @@
+
 import EventDetailClient from "@/components/event-detail-client";
 import { Metadata } from "next";
 
