@@ -1,10 +1,25 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // WARNING: This allows any client to read and write to the entire database.
-    // This is for debugging only and is not secure.
-    match /{document=**} {
-      allow read, write: if true;
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    match /events/{eventId} {
+      allow read, update, delete: if isSignedIn() && isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+
+      // Rules for the 'expenses' subcollection
+      match /expenses/{expenseId} {
+        // The eventId from the parent document is available here
+        allow read, create, delete: if isSignedIn() && isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+      }
     }
   }
 }
