@@ -2,11 +2,32 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read and write access to all documents for debugging.
-    // WARNING: This is insecure and should be replaced with secure rules
-    // before deploying the application.
-    match /{document=**} {
-      allow read, write: if true;
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Checks if the user making the request is the owner of the document.
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Rules for the 'events' collection
+    match /events/{eventId} {
+      // Users can only read, update, or delete an event if they are signed in
+      // and they are the owner of that event.
+      allow read, update, delete: if isSignedIn() && isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+      
+      // A user can create an event if they are signed in and the event's userId
+      // matches their own uid.
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+
+      // Rules for the 'expenses' subcollection nested under an event
+      match /expenses/{expenseId} {
+        // Users can read, create, or delete an expense if they are signed in
+        // and they are the owner of the parent event document.
+        allow read, create, delete: if isSignedIn() && isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+      }
     }
   }
 }
