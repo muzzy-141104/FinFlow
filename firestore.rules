@@ -2,11 +2,40 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read and write access to all documents for debugging.
-    // WARNING: This is insecure and should be replaced with secure rules
-    // before deploying the application.
-    match /{document=**} {
-      allow read, write: if true;
+
+    // Helper function to check if a user is signed in.
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the signed-in user's ID matches a given userId.
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Rules for the 'events' collection.
+    match /events/{eventId} {
+      // An event can be created if the user is signed in and the event's userId
+      // matches their own auth uid.
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      
+      // An event can be read, updated, or deleted if the user is the owner.
+      // The rule fetches the document to verify its userId field.
+      allow read, update, delete: if isSignedIn() && isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+
+      // Rules for the 'expenses' subcollection nested under an event.
+      match /expenses/{expenseId} {
+        // A user can read, create, update, or delete an expense if they are the owner
+        // of the parent event document.
+        allow read, create, update, delete: if isSignedIn() && isOwner(get(/databases/$(database)/documents/events/$(eventId)).data.userId);
+      }
+    }
+
+    // This rule allows a user to LIST events, but only if their query
+    // specifically filters for their own userId. This is the key rule that
+    // secures the dashboard query.
+    match /events/{eventId} {
+        allow list: if isSignedIn() && request.query.where.get("userId") == request.auth.uid;
     }
   }
 }
