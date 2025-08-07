@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Wallet, PieChart, TrendingUp } from "lucide-react";
+import { ArrowRight, Wallet, PieChart, TrendingUp, Github } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 // 3D Floating Coins Component using Canvas
@@ -65,7 +65,7 @@ const FloatingCoins = () => {
                 ctx.fill();
                 
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.font = `${coin.size * 0.5}px bold Arial`;
+                ctx.font = `${'${coin.size * 0.5}'}px bold Arial`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText('$', 0, 1);
@@ -106,7 +106,7 @@ const FloatingCoins = () => {
 const AnimatedWallet = ({ className = "" }) => {
     return (
         <div
-            className={`group relative w-64 h-64 mx-auto cursor-pointer ${className}`}
+            className={`group relative w-64 h-64 mx-auto cursor-pointer ${'${className}'}`}
             style={{ perspective: '1000px' }}
         >
             <div
@@ -235,7 +235,7 @@ const FeatureCard = ({ icon, title, description, delay, feature }: { icon: React
             }`}
             style={{
                 perspective: '800px',
-                transitionDelay: `${delay}ms`,
+                transitionDelay: `${'${delay}'}ms`,
             }}
         >
             <div className="h-24 w-24 flex items-center justify-center">
@@ -365,10 +365,14 @@ export default function LandingPage() {
                 `}</style>
                 {/* Footer */}
                 <footer className="w-full py-8 bg-background border-t">
-                    <div className="container px-4 md:px-6 flex justify-center items-center">
-                        <p className="text-sm text-muted-foreground">
+                    <div className="container px-4 md:px-6 flex flex-col sm:flex-row justify-center items-center gap-4">
+                        <p className="text-sm text-muted-foreground text-center">
                             © 2024 FinFlow. All rights reserved.
                         </p>
+                        <div className="hidden sm:block border-l h-4 border-muted-foreground/50"></div>
+                        <a href="https://github.com/google-gemini" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-2">
+                           <Github className="w-4 h-4" /> Created by The Gemini Team
+                        </a>
                     </div>
                 </footer>
             </main>

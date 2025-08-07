@@ -134,10 +134,10 @@ export function EventsDashboard() {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl md:text-3xl font-bold font-headline tracking-tight">
-            Your Events
+            Welcome, {user?.displayName?.split(' ')[0] || 'User'}!
           </h1>
           <p className="text-muted-foreground">
-            Create and manage your expense events.
+            Here are your events. Create and manage your expense tracking.
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
