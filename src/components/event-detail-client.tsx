@@ -61,13 +61,16 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
   useEffect(() => {
     if (!user) {
-      setIsLoading(false);
-      return;
+      // If there's no user, we shouldn't try to fetch data.
+      // Set loading to false after a short delay to avoid flickering.
+      const timer = setTimeout(() => setIsLoading(false), 200);
+      return () => clearTimeout(timer);
     }
     
     setIsLoading(true);
     const eventRef = doc(db, "events", eventId);
     
+    // Subscribe to the event document
     const unSubEvent = onSnapshot(eventRef, (eventDoc) => {
         if (!eventDoc.exists() || eventDoc.data().userId !== user.uid) {
           toast({ title: "Access Denied", description: "Event not found or you don't have permission.", variant: "destructive" });
@@ -78,9 +81,11 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
         const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
         
+        // Once we have the event and confirmed ownership, fetch expenses
         const expensesQuery = collection(db, `events/${eventId}/expenses`);
         const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
             const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
+            // Combine event data and expenses data into a single state update
             setEvent({ ...eventData, expenses: expensesData });
             setIsLoading(false);
         }, (error) => {
@@ -89,6 +94,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           setIsLoading(false);
         });
 
+        // Return the cleanup function for the expenses listener
         return () => unSubExpenses();
 
     }, (error) => {
@@ -97,6 +103,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
         setIsLoading(false);
     });
 
+    // Return the cleanup function for the event listener
     return () => unSubEvent();
   }, [eventId, user, toast]);
 
@@ -107,13 +114,15 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
 
   const addExpense = async (values: z.infer<typeof formSchema>) => {
-    if (!event) return;
+    if (!event || !user) return;
 
     try {
         const expensesCollectionRef = collection(db, "events", eventId, "expenses");
         await addDoc(expensesCollectionRef, {
             ...values,
             date: values.date.toISOString(),
+            // Ensure we tag the expense with the user ID for potential collection group queries
+            userId: user.uid, 
         });
         toast({
           title: "Expense Added",
@@ -270,7 +279,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
               Total transactions recorded
             </p>
           </CardContent>
-        </Card>
+        </card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-5">
