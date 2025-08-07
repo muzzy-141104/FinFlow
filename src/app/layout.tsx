@@ -27,8 +27,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    shortcut: "/favicon.ico",
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: "/wallet-favicon.svg",
+    icon: "/wallet-favicon.svg",
+    apple: [{ url: "/wallet-favicon.svg" }],
   },
   keywords: ["expense tracker", "budgeting", "event expenses", "finance management", "trip budget"],
 };

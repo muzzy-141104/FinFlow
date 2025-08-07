@@ -367,11 +367,11 @@ export default function LandingPage() {
                 <footer className="w-full py-8 bg-background border-t">
                     <div className="container px-4 md:px-6 flex flex-col sm:flex-row justify-center items-center gap-4">
                         <p className="text-sm text-muted-foreground text-center">
-                            © 2024 FinFlow. All rights reserved.
+                            © 2025 FinFlow. All rights reserved.
                         </p>
                         <div className="hidden sm:block border-l h-4 border-muted-foreground/50"></div>
-                        <a href="https://github.com/google-gemini" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-2">
-                           <Github className="w-4 h-4" /> Created by The Gemini Team
+                        <a href="https://github.com/muzzy-141104" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-2">
+                           <Github className="w-4 h-4" /> Created by Muzzy
                         </a>
                     </div>
                 </footer>
