@@ -41,30 +41,30 @@ export function EventsDashboard() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (authLoading) {
-      return;
-    }
-    if (!user) {
+    // If the user object is available, we set up the listener.
+    if (user) {
+      setIsLoading(true);
+      const q = query(collection(db, "events"), where("userId", "==", user.uid));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+          const userEvents: Event[] = [];
+          querySnapshot.forEach((doc: DocumentData) => {
+              userEvents.push({ id: doc.id, ...doc.data() } as Event);
+          });
+          setEvents(userEvents.sort((a, b) => a.name.localeCompare(b.name)));
+          setIsLoading(false);
+      }, (error) => {
+          console.error("Error fetching events: ", error);
+          toast({ title: "Error", description: "Could not fetch events.", variant: "destructive" });
+          setIsLoading(false);
+      });
+
+      // Cleanup the listener when the component unmounts or the user changes.
+      return () => unsubscribe();
+    } else if (!authLoading) {
+      // If auth is done loading and there's no user, clear events and stop loading.
       setEvents([]);
       setIsLoading(false);
-      return;
     }
-
-    const q = query(collection(db, "events"), where("userId", "==", user.uid));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-        const userEvents: Event[] = [];
-        querySnapshot.forEach((doc: DocumentData) => {
-            userEvents.push({ id: doc.id, ...doc.data() } as Event);
-        });
-        setEvents(userEvents.sort((a, b) => a.name.localeCompare(b.name)));
-        setIsLoading(false);
-    }, (error) => {
-        console.error("Error fetching events: ", error);
-        toast({ title: "Error", description: "Could not fetch events.", variant: "destructive" });
-        setIsLoading(false);
-    });
-
-    return () => unsubscribe();
   }, [user, authLoading, toast]);
 
 
@@ -109,7 +109,7 @@ export function EventsDashboard() {
     }
   };
   
-  if (isLoading || authLoading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto p-4 sm:p-6 lg:p-8 text-center py-20 flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
         <LoadingSpinner size="lg" />
