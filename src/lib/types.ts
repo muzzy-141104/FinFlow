@@ -17,28 +17,29 @@ export interface Expense {
   date: string; // ISO string
 }
 
-export const currencies = {
-  USD: { symbol: "$", name: "US Dollar" },
-  EUR: { symbol: "€", name: "Euro" },
-  JPY: { symbol: "¥", name: "Japanese Yen" },
-  GBP: { symbol: "£", name: "British Pound" },
-  INR: { symbol: "₹", name: "Indian Rupee" },
-  AUD: { symbol: "A$", name: "Australian Dollar" },
-  CAD: { symbol: "C$", name: "Canadian Dollar" },
-  CHF: { symbol: "Fr", name: "Swiss Franc" },
-  CNY: { symbol: "¥", name: "Chinese Yuan" },
-  SEK: { symbol: "kr", name: "Swedish Krona" },
-  NZD: { symbol: "NZ$", name: "New Zealand Dollar" },
-  MXN: { symbol: "Mex$", name: "Mexican Peso" },
-  SGD: { symbol: "S$", name: "Singapore Dollar" },
-  HKD: { symbol: "HK$", name: "Hong Kong Dollar" },
-  NOK: { symbol: "kr", name: "Norwegian Krone" },
-  KRW: { symbol: "₩", name: "South Korean Won" },
-  TRY: { symbol: "₺", name: "Turkish Lira" },
-  RUB: { symbol: "₽", name: "Russian Ruble" },
-  BRL: { symbol: "R$", name: "Brazilian Real" },
-  ZAR: { symbol: "R", name: "South African Rand" },
-};
+export const currencies = Object.freeze({
+  AUD: { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+  BRL: { code: "BRL", symbol: "R$", name: "Brazilian Real" },
+  CAD: { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+  CHF: { code: "CHF", symbol: "Fr", name: "Swiss Franc" },
+  CNY: { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
+  EUR: { code: "EUR", symbol: "€", name: "Euro" },
+  GBP: { code: "GBP", symbol: "£", name: "British Pound" },
+  HKD: { code: "HKD", symbol: "HK$", name: "Hong Kong Dollar" },
+  INR: { code: "INR", symbol: "₹", name: "Indian Rupee" },
+  JPY: { code: "JPY", symbol: "¥", name: "Japanese Yen" },
+  KRW: { code: "KRW", symbol: "₩", name: "South Korean Won" },
+  MXN: { code: "MXN", symbol: "Mex$", name: "Mexican Peso" },
+  NOK: { code: "NOK", symbol: "kr", name: "Norwegian Krone" },
+  NZD: { code: "NZD", symbol: "NZ$", name: "New Zealand Dollar" },
+  RUB: { code: "RUB", symbol: "₽", name: "Russian Ruble" },
+  SEK: { code: "SEK", symbol: "kr", name: "Swedish Krona" },
+  SGD: { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
+  TRY: { code: "TRY", symbol: "₺", name: "Turkish Lira" },
+  USD: { code: "USD", symbol: "$", name: "US Dollar" },
+  ZAR: { code: "ZAR", symbol: "R", name: "South African Rand" },
+});
+
 
 export type Currency = keyof typeof currencies;
 

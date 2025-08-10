@@ -17,16 +17,16 @@ import { db } from "@/lib/firebase";
 import { Button } from "./ui/button";
 import { Trash2 } from "lucide-react";
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-  } from "@/components/ui/alert-dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { placeholderImages } from "@/lib/placeholders";
 
 interface EventCardProps {
@@ -46,19 +46,16 @@ export function EventCard({ event, onDelete }: EventCardProps) {
     // onSnapshot listens for real-time updates to the query.
     // When the data changes (expense added/deleted), this function will re-run.
     const unsubscribe = onSnapshot(expensesQuery, (snapshot) => {
-        const expensesData = snapshot.docs.map(doc => doc.data() as Omit<Expense, 'id'>);
-        const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
-        
-        setExpenseCount(snapshot.size);
-        setTotalExpenses(total);
+      const expensesData = snapshot.docs.map(doc => doc.data() as Omit<Expense, 'id'>);
+      const total = expensesData.reduce((sum, expense) => sum + expense.amount, 0);
+
+      setExpenseCount(snapshot.size);
+      setTotalExpenses(total);
     }, (error) => {
-        // It's better to log errors for debugging, even if they are handled.
-        console.error(`Error fetching expenses for event ${event.id}:`, error);
+      // It's better to log errors for debugging, even if they are handled.
+      console.error(`Error fetching expenses for event ${event.id}:`, error);
     });
 
-    // The cleanup function returned by useEffect.
-    // It unsubscribes from the snapshot listener when the component unmounts
-    // or when the event.id changes, preventing memory leaks.
     return () => unsubscribe();
   }, [event.id]);
 
@@ -66,29 +63,29 @@ export function EventCard({ event, onDelete }: EventCardProps) {
 
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300 h-full flex flex-col overflow-hidden group relative">
-         <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-         <AlertDialog>
-            <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="icon">
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        This will permanently delete the event and all its expenses. This action cannot be undone.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete(event.id)}>
-                        Delete
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
+      <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" size="icon">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the event and all its expenses. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onDelete(event.id)}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
         </AlertDialog>
-        </div>
+      </div>
       <Link href={`/events/${event.id}`} className="flex flex-col h-full">
         <div className="relative w-full h-56">
           <Image

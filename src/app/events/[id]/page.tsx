@@ -5,13 +5,14 @@ import { type Event } from "@/lib/types";
 import { Metadata } from "next";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
+    const { id } = await params;
     const adminDb = getAdminDb();
-    const eventRef = adminDb.collection("events").doc(params.id);
+    const eventRef = adminDb.collection("events").doc(id);
     const eventDoc = await eventRef.get();
 
     if (!eventDoc.exists) {
@@ -37,10 +38,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 
-export default function EventDetailPage({ params }: { params: { id: string } }) {
+export default async function EventDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      <EventDetailClient eventId={params.id} />
+      <EventDetailClient eventId={id} />
     </div>
   );
 }

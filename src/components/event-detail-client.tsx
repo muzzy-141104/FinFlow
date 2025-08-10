@@ -41,10 +41,10 @@ const formSchema = z.object({
 });
 
 declare module "jspdf" {
-    interface jsPDF {
-      autoTable: (options: any) => jsPDF;
-    }
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
   }
+}
 
 export default function EventDetailClient({ eventId }: { eventId: string }) {
   const [event, setEvent] = useState<EventWithSubcollections | null>(null);
@@ -52,7 +52,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
-  
+
   useEffect(() => {
     if (event?.name) {
       document.title = `${event.name} | FinFlow`;
@@ -64,63 +64,63 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
     let unsubscribe: (() => void) | undefined;
 
     if (user) {
-        setIsLoading(true);
-        const eventRef = doc(db, "events", eventId);
+      setIsLoading(true);
+      const eventRef = doc(db, "events", eventId);
 
-        const unSubEvent = onSnapshot(eventRef, (eventDoc) => {
-            if (!eventDoc.exists() || eventDoc.data().userId !== user.uid) {
-                toast({ title: "Access Denied", description: "Event not found or you don't have permission.", variant: "destructive" });
-                setEvent(null);
-                setIsLoading(false);
-                return;
-            }
+      const unSubEvent = onSnapshot(eventRef, (eventDoc) => {
+        if (!eventDoc.exists() || eventDoc.data().userId !== user.uid) {
+          toast({ title: "Access Denied", description: "Event not found or you don't have permission.", variant: "destructive" });
+          setEvent(null);
+          setIsLoading(false);
+          return;
+        }
 
-            const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
-            const expensesQuery = collection(db, `events/${eventId}/expenses`);
+        const eventData = { id: eventDoc.id, ...eventDoc.data() } as Event;
+        const expensesQuery = collection(db, `events/${eventId}/expenses`);
 
-            const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
-                const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
-                setEvent({ ...eventData, expenses: expensesData });
-                setIsLoading(false);
-            }, (error) => {
-                // Ignore permission errors that can happen during logout.
-                if (error.code !== 'permission-denied') {
-                    console.error("Error fetching expenses: ", error);
-                    toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
-                }
-                setIsLoading(false);
-            });
-
-            // Combine the cleanup functions.
-            unsubscribe = () => {
-                unSubEvent();
-                unSubExpenses();
-            };
-
+        const unSubExpenses = onSnapshot(expensesQuery, (snapshot) => {
+          const expensesData = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Expense));
+          setEvent({ ...eventData, expenses: expensesData });
+          setIsLoading(false);
         }, (error) => {
-            // Ignore permission errors that can happen during logout.
-            if (error.code !== 'permission-denied') {
-                console.error("Error fetching event: ", error);
-                toast({ title: "Error", description: "Failed to fetch event data.", variant: "destructive" });
-            }
-            setIsLoading(false);
+          // Ignore permission errors that can happen during logout.
+          if (error.code !== 'permission-denied') {
+            console.error("Error fetching expenses: ", error);
+            toast({ title: "Error", description: "Failed to fetch expense data.", variant: "destructive" });
+          }
+          setIsLoading(false);
         });
 
-        // The top-level cleanup function for the event listener itself.
-        unsubscribe = unSubEvent;
-    } else {
-        // If there's no user, stop loading and clear data.
+        // Combine the cleanup functions.
+        unsubscribe = () => {
+          unSubEvent();
+          unSubExpenses();
+        };
+
+      }, (error) => {
+        // Ignore permission errors that can happen during logout.
+        if (error.code !== 'permission-denied') {
+          console.error("Error fetching event: ", error);
+          toast({ title: "Error", description: "Failed to fetch event data.", variant: "destructive" });
+        }
         setIsLoading(false);
-        setEvent(null);
+      });
+
+      // The top-level cleanup function for the event listener itself.
+      unsubscribe = unSubEvent;
+    } else {
+      // If there's no user, stop loading and clear data.
+      setIsLoading(false);
+      setEvent(null);
     }
 
     // Return a single cleanup function that will be called on unmount or when dependencies change.
     return () => {
-        if (unsubscribe) {
-            unsubscribe();
-        }
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-}, [eventId, user, toast]);
+  }, [eventId, user, toast]);
 
 
   const currencySymbol = useMemo(() => {
@@ -133,58 +133,58 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
     if (!event || !user) return;
 
     try {
-        const expensesCollectionRef = collection(db, "events", eventId, "expenses");
-        await addDoc(expensesCollectionRef, {
-            ...values,
-            date: values.date.toISOString(),
-            // Ensure we tag the expense with the user ID for potential collection group queries
-            userId: user.uid, 
-        });
-        toast({
-          title: "Expense Added",
-          description: `"${values.description}" has been added to your event.`,
-        });
+      const expensesCollectionRef = collection(db, "events", eventId, "expenses");
+      await addDoc(expensesCollectionRef, {
+        ...values,
+        date: values.date.toISOString(),
+        // Ensure we tag the expense with the user ID for potential collection group queries
+        userId: user.uid,
+      });
+      toast({
+        title: "Expense Added",
+        description: `"${values.description}" has been added to your event.`,
+      });
     } catch (e) {
-        console.error("Error adding expense: ", e);
-        toast({
-            title: "Error",
-            description: "Could not add expense. Please try again.",
-            variant: "destructive"
-        })
+      console.error("Error adding expense: ", e);
+      toast({
+        title: "Error",
+        description: "Could not add expense. Please try again.",
+        variant: "destructive"
+      })
     }
   };
 
   const deleteExpense = async (expenseId: string) => {
-     if (!event) return;
-     
-     try {
-        const expenseDocRef = doc(db, "events", eventId, "expenses", expenseId);
-        await deleteDoc(expenseDocRef);
-        toast({
-            title: "Expense Deleted",
-            description: "The expense has been removed from your event.",
-            variant: "destructive"
-        })
-     } catch (e) {
-        console.error("Error deleting expense: ", e);
-        toast({
-            title: "Error",
-            description: "Could not delete expense. Please try again.",
-            variant: "destructive"
-        })
-     }
+    if (!event) return;
+
+    try {
+      const expenseDocRef = doc(db, "events", eventId, "expenses", expenseId);
+      await deleteDoc(expenseDocRef);
+      toast({
+        title: "Expense Deleted",
+        description: "The expense has been removed from your event.",
+        variant: "destructive"
+      })
+    } catch (e) {
+      console.error("Error deleting expense: ", e);
+      toast({
+        title: "Error",
+        description: "Could not delete expense. Please try again.",
+        variant: "destructive"
+      })
+    }
   }
 
   const downloadPdf = () => {
-    if(!event) return;
+    if (!event) return;
     const doc = new jsPDF();
     const totalExpensesValue = event?.expenses.reduce((sum, expense) => sum + expense.amount, 0) || 0;
-    
+
     // Set document properties
     doc.setProperties({
-        title: `Expense Report for ${event.name}`,
-        subject: `A summary of all expenses for the event: ${event.name}`,
-        creator: 'FinFlow Application'
+      title: `Expense Report for ${event.name}`,
+      subject: `A summary of all expenses for the event: ${event.name}`,
+      creator: 'FinFlow Application'
     });
 
     // Header
@@ -196,36 +196,36 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
 
     doc.autoTable({
-        startY: 35,
-        head: [['Date', 'Description', 'Category', 'Amount']],
-        body: event.expenses
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .map(e => [
-                format(new Date(e.date), 'PPP'),
-                e.description,
-                e.category,
-                `${currencySymbol}${e.amount.toFixed(2)}`
-            ]),
-        foot: [['', 'Total', '', `${currencySymbol}${totalExpensesValue.toFixed(2)}`]],
-        showFoot: 'last_page',
-        headStyles: { fillColor: [41, 128, 185] },
-        footStyles: { fillColor: [41, 128, 185], textColor: 255 },
-        didDrawPage: (data) => {
-            // Footer
-            const pageCount = doc.getNumberOfPages();
-            doc.setFontSize(10);
-            doc.setTextColor(150);
-            const footerText = 'Report generated by FinFlow';
-            const footerTextX = 14;
-            const footerTextY = doc.internal.pageSize.height - 10;
-            doc.text(footerText, footerTextX, footerTextY);
+      startY: 35,
+      head: [['Date', 'Description', 'Category', 'Amount']],
+      body: event.expenses
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map(e => [
+          format(new Date(e.date), 'PPP'),
+          e.description,
+          e.category,
+          `${currencySymbol}${e.amount.toFixed(2)}`
+        ]),
+      foot: [['', 'Total', '', `${currencySymbol}${totalExpensesValue.toFixed(2)}`]],
+      showFoot: 'last_page',
+      headStyles: { fillColor: [41, 128, 185] },
+      footStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      didDrawPage: (data: any) => {
+        // Footer
+        const pageCount = doc.getNumberOfPages();
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        const footerText = 'Report generated by FinFlow';
+        const footerTextX = 14;
+        const footerTextY = doc.internal.pageSize.height - 10;
+        doc.text(footerText, footerTextX, footerTextY);
 
-            // Page number
-            const pageNumText = `Page ${data.pageNumber} of ${pageCount}`;
-            const pageNumTextWidth = doc.getStringUnitWidth(pageNumText) * doc.getFontSize() / doc.internal.scaleFactor;
-            const pageNumTextX = doc.internal.pageSize.width - 14 - pageNumTextWidth;
-            doc.text(pageNumText, pageNumTextX, footerTextY);
-        }
+        // Page number
+        const pageNumText = `Page ${data.pageNumber} of ${pageCount}`;
+        const pageNumTextWidth = doc.getStringUnitWidth(pageNumText) * doc.getFontSize() / doc.internal.scaleFactor;
+        const pageNumTextX = doc.internal.pageSize.width - 14 - pageNumTextWidth;
+        doc.text(pageNumText, pageNumTextX, footerTextY);
+      }
     });
 
     doc.save(`${event.name.toLowerCase().replace(/\s/g, '-')}-expenses.pdf`);
@@ -237,14 +237,14 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
 
   if (isLoading) {
     return (
-        <div className="text-center py-20 flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
-            <LoadingSpinner size="lg" />
-            <h2 className="text-2xl font-semibold mb-2 mt-4">Loading Event...</h2>
-            <p className="text-muted-foreground mb-4">
-                Please wait while we load your event details.
-            </p>
-        </div>
-      );
+      <div className="text-center py-20 flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
+        <LoadingSpinner size="lg" />
+        <h2 className="text-2xl font-semibold mb-2 mt-4">Loading Event...</h2>
+        <p className="text-muted-foreground mb-4">
+          Please wait while we load your event details.
+        </p>
+      </div>
+    );
   }
 
   if (!event) {
@@ -277,27 +277,27 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           <p className="text-muted-foreground">{event.description}</p>
         </div>
         <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={downloadPdf}>
-                <Download className="mr-2 h-4 w-4" />
-                Download PDF
-            </Button>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Button variant="outline" onClick={downloadPdf}>
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-                <Button>
+              <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Expense
-                </Button>
+              </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px]">
-                <DialogHeader>
+              <DialogHeader>
                 <DialogTitle>Add a New Expense</DialogTitle>
-                </DialogHeader>
-                <AddExpenseForm
+              </DialogHeader>
+              <AddExpenseForm
                 onSave={addExpense}
                 onClose={() => setIsDialogOpen(false)}
-                />
+              />
             </DialogContent>
-            </Dialog>
+          </Dialog>
         </div>
       </div>
 
@@ -335,7 +335,7 @@ export default function EventDetailClient({ eventId }: { eventId: string }) {
           <ExpensesTable expenses={event.expenses} onDeleteExpense={deleteExpense} currencySymbol={currencySymbol} />
         </div>
         <div className="lg:col-span-2 space-y-6">
-            <ExpenseChart expenses={event.expenses} />
+          <ExpenseChart expenses={event.expenses} />
         </div>
       </div>
     </div>
